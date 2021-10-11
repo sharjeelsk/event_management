@@ -36,6 +36,16 @@ class Event {
             if(user){
                 let {eventId} = req.body
                 let event = await eventModel.findOne({_id: eventId})
+                .populate([{
+                    path: "bids",
+                    model: "Bid",
+                    populate: {
+                      path: "userId",
+                      model: "User"
+                }
+                  },
+                ])
+                            console.log(event)
               // .populate()
             if (event) {
               return res.status(200).json({ result: event, msg: "Success"});
@@ -66,8 +76,9 @@ class Event {
 
     async createEvent(req, res) {
         try {
-            let { mobileNo, email, address, name, description, type, location, status, start, end, reqServices} = req.body;
-            if(!mobileNo || !email || !address || !name || !description || !type || !location || !status || !start || !end || !reqServices){
+            let { mobileNo, email, address, name, description, type, location, start, end, reqServices, eventAddress} = req.body;
+            console.log(req.body)
+            if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                 let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
@@ -81,12 +92,12 @@ class Event {
                         name, 
                         description, 
                         type, 
-                        location, 
-                        status, 
+                        location,
                         start, 
                         end, 
                         reqServices,
                         totalSubs: 1,
+                        eventAddress,
                         subs: user._id
                     })
                     await event.save().then(async(result) => {
@@ -96,6 +107,12 @@ class Event {
                             console.log("User Updated Successfully")
                             return res.status(200).json({ result: result, msg: "Success"});
                         })
+                        .catch(err=>{
+                          console.log(err)
+                        })
+                    })
+                    .catch(err=>{
+                      console.log(err)
                     })
                 } else {
                     return res.status(400).json({ result: "Unauthorised", msg: "Error"});
@@ -190,6 +207,37 @@ class Event {
             return res.status(500).json({ result: err, msg: "Error"});
           }
     }
+
+    async unSubEvent(req, res) {
+      try {
+          let { eventId } = req.body;
+          if(!eventId){
+              return res.status(500).json({ result: "Data Missing", msg: "Error"});
+          } else {
+              let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
+              let user = await User.findOne({mobileNo: decoded.data});
+              if(user) {
+                      var query = {
+                       _id: eventId,
+                       subs: {$ne: user._id}
+                        };
+                      let eventInc = await eventModel.updateOne(query, {$inc: {totalSubs: "+1"}})
+                      let updatedEvent = await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: user._id}})
+                      if(updatedEvent) {
+                          let updatedUser= await User.updateOne({_id: user._id}, {$addToSet: {myEvents: eventId}})
+                          if(updatedUser){
+                              return res.status(200).json({ result: "Joined", msg: "Success" });
+                          }
+                      }
+              } else {
+                  return res.status(400).json({ result: "Unauthorised", msg: "Error"});
+              }
+          }
+        } catch (err) {
+          console.log(err)
+          return res.status(500).json({ result: err, msg: "Error"});
+        }
+  }
 }
 
 const eventController = new Event();

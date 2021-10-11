@@ -63,26 +63,39 @@ class Bid {
 
     async createBid(req, res) {
         try {
-            let { eventId, services, totalPrice, discountType, discountValue} = req.body;
-            if(!eventId || !services || !totalPrice || !discountType || !discountValue){
+            let { eventId, services, totalPrice, description} = req.body;
+            if(!eventId || !services || !totalPrice || !description){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                 let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
                 let user = await User.findOne({mobileNo: decoded.data});
                 if(user) {
-                    let event = await Event.findOne({_id: eventId});
+                    let event = await Event.findOne({_id: eventId})
+                                .populate({path:'bids', select:'userId'})
+                                // console.log("_____________________________________________________________")
+                                // console.log(typeof(user._id))
+                                // console.log("_____________________________________________________________")
+                                let bider;
+                      await event.bids.forEach(bid => {
+                          bider = bid.userId.equals(user._id)
+                            if(bider === true){
+                                return false
+                            }
+                        });
+                        console.log(bider)
                     let condition = event.organiserId.equals(user._id)
                     if(condition === true){
                         return res.status(200).json({ result: "Orgainser Cant Bid", msg: "Success"});
+                    } else if (bider === true) {
+                        return res.status(200).json({ result: "Already Bided", msg: "Success"});
                     } else {
+                        
                         let bid = new bidModel({
                             eventId,
                             userId: user._id,
                             services,
                             totalPrice,
-                            discountType,
-                            discountValue,
-                            discountedPrice: totalPrice
+                            description
                         })
                         await bid.save().then(async(result) => {
                             let query = {
@@ -90,9 +103,10 @@ class Bid {
                                 bids: {$ne: user._id}
                                  };
                             let eventInc = await Event.updateOne(query, {$inc: {totalBids: "+1"}})
-                            console.log("Bid Created Successfully... Updating User Bid...")
+                            console.log("Bid Created Successfully... Updating User and Event...")
                             await Event.updateOne({_id: eventId}, {$addToSet: {bids: result._id}})
                             .then( async () => {
+                                console.log("Event Updated Successfully")
                                 await User.updateOne({mobileNo: decoded.data}, {$addToSet: {myBids: result._id}})
                                 .then( (updatedUser) => {
                                     console.log("User Updated Successfully")

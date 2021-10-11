@@ -62,8 +62,9 @@ class Service {
 
     async createService(req, res) {
         try {
-            let { name, vendorId, mobileNo, email, address, type, subType,price, description} = req.body;
-            if(!name || !vendorId || !mobileNo || !email || ! address || !type || !subType || !price || !description){
+          console.log(req.body)
+            let { name, vendorId, subType,price, quantity} = req.body;
+            if(!name || !vendorId  || !subType || !price || !quantity){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                 let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
@@ -72,13 +73,13 @@ class Service {
                     let service = new ServiceModel({
                         name,
                         vendorId,
-                        mobileNo,
-                        email,
-                        address,
-                        type,
+                        // mobileNo,
+                        // email,
+                        // address,
+                        // type,
                         subType,
                         price,
-                        description
+                        quantity
                     })
                     await service.save().then(async(result) => {
                         console.log("Service Created Successfully... Updating User Services...")

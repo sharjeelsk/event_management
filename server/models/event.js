@@ -25,6 +25,9 @@ const eventSchema = new mongoose.Schema(
             type: String,
             required: true,
             },
+        eventAddress: { 
+            type: String,
+            },
         description: {
             type: String,
             required: true,
@@ -32,29 +35,16 @@ const eventSchema = new mongoose.Schema(
         type: {
             type: String,
             enum: [
-                "Private",
-                "Public",
+                "PRIVATE",
+                "PUBLIC",
               ],
               require: true,
             },
-        location: {
-            // name: {
-            //     type: String,
-            //     required: true,
-            //     },
-            type: {
-                type: String, 
-                enum: ['Point'],
-                required: true
-                },
-            coordinates: {
-                type: [Number],
-                required: true
-                }
-            },
+        location: { },
         status: {
             type: String,
-            enum: ['Active', "InActive"],
+            enum: ['ACTIVE', "INACTIVE"],
+            default: "INACTIVE",
             require: true
             },
         start: {

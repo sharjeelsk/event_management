@@ -11,22 +11,26 @@ const bidSchema = new mongoose.Schema(
         type: Number,
         required: true
         },
-    currency: {
-        type: String
-        },
-    discountType: {
+    description: {
         type: String,
-        enum: ["FLAT", "PERCENT", "NONE"],
         required: true
         },
-    discountValue: {
-        type: Number,
-        required: true
-        },
-     discountedPrice: {
-        type: Number,
-        required: true
-        },
+    // currency: {
+    //     type: String
+    //     },
+    // discountType: {
+    //     type: String,
+    //     enum: ["FLAT", "PERCENT", "NONE"],
+    //     required: true
+    //     },
+    // discountValue: {
+    //     type: Number,
+    //     required: true
+    //     },
+    //  discountedPrice: {
+    //     type: Number,
+    //     required: true
+    //     },
     status: {
         type: String,
         enum: ["Pending", "Approved"],

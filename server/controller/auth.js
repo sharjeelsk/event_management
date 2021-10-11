@@ -52,6 +52,8 @@ class Auth {
     }
     let data = `${phone}.${otp}.${expires}`;
     let newCalculatedHash = crypto.createHmac('sha256', process.env.ACCOUNT).update(data).digest('hex');
+    const accessToken = jwt.sign({ data: phone }, JWT_AUTH_TOKEN, { expiresIn: '30s' });
+    const refreshToken = jwt.sign({ data: phone }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
     if (newCalculatedHash === hashValue) {
       console.log('user confirmed');
 
@@ -60,7 +62,7 @@ class Auth {
       if(user){
         // console.log(user)
         console.log("User Already Exist, Logging in...")
-        res.status(200).send({ msg: 'Verified' });
+        res.status(200).send({result: refreshToken,  msg: 'login' });
       } else {
         try{
           console.log("New User being Created...")
@@ -72,8 +74,7 @@ class Auth {
           
           if(save){
             console.log("user Created Successfully")
-            const accessToken = jwt.sign({ data: phone }, JWT_AUTH_TOKEN, { expiresIn: '30s' });
-            const refreshToken = jwt.sign({ data: phone }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+
             refreshTokens.push(refreshToken);
             res
               .status(202)
@@ -96,7 +97,7 @@ class Auth {
                 sameSite: 'strict'
               })
             // res.status(200)
-            .send({msg: "Success"})
+            .send({result: refreshToken, msg: "signup"})
           }
         } catch (err) {
           res.status(400).send({error: err, msg: err})
@@ -107,7 +108,7 @@ class Auth {
         
     } else {
       console.log('not authenticated');
-      return res.status(400).send({ verification: false, msg: 'Incorrect' });
+      return res.status(200).send({ result: "Incorrect", msg: 'Success' });
     }
   };
 

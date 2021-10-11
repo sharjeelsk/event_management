@@ -11,24 +11,24 @@ const serviceSchema = new mongoose.Schema(
             type: ObjectId, ref: "User",
             required: true
         },
-        mobileNo: {
-            type: Number,
-            required: true,
-        },
-        email: {
-            type: String,
-            trim: true, 
-            match: /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/,
-            required: true,
-          },
-        address: {
-            type: String,
-            required: true,
-        },
-    type: {
-      type: String,
-      require: true,
-    },
+        // mobileNo: {
+        //     type: Number,
+        //     // required: true,
+        // },
+        // email: {
+        //     type: String,
+        //     trim: true, 
+        //     match: /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/,
+        //     // required: true,
+        //   },
+        // address: {
+        //     type: String,
+        //     // required: true,
+        // },
+    // type: {
+    //   type: String,
+    //   require: true,
+    // },
     subType: {
       type: String,
       require: true,
@@ -37,8 +37,12 @@ const serviceSchema = new mongoose.Schema(
       type: Number,
       require: true,
     },
-    description: {
-      type: String,
+    // description: {
+    //   type: String,
+    //   required: true,
+    //  },
+        quantity: {
+      type: Number,
       required: true,
      },
   },
