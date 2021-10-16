@@ -3,48 +3,30 @@ const { ObjectId } = mongoose.Schema.Types;
 
 const serviceSchema = new mongoose.Schema(
   {
-    name: {
+    categoryId: {
+      type: ObjectId, ref: "Category",
+      required: true
+    },
+    category: {
       type: String,
-      required: true,
+      required: true
     },
-        vendorId: {
-            type: ObjectId, ref: "User",
-            required: true
-        },
-        // mobileNo: {
-        //     type: Number,
-        //     // required: true,
-        // },
-        // email: {
-        //     type: String,
-        //     trim: true, 
-        //     match: /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/,
-        //     // required: true,
-        //   },
-        // address: {
-        //     type: String,
-        //     // required: true,
-        // },
-    // type: {
-    //   type: String,
-    //   require: true,
-    // },
-    subType: {
+    user: {
+      type: ObjectId, ref: "User",
+      required: true
+    },
+    subCategory: {
       type: String,
-      require: true,
+      required: true
     },
-    price:{
+    quantity: {
       type: Number,
-      require: true,
+      required: true
     },
-    // description: {
-    //   type: String,
-    //   required: true,
-    //  },
-        quantity: {
+    price: {
       type: Number,
-      required: true,
-     },
+      required: true
+    }
   },
   { timestamps: true }
 );
@@ -52,21 +34,4 @@ const serviceSchema = new mongoose.Schema(
 const Service = mongoose.model("Service", serviceSchema);
 module.exports = Service;
 
-    // price: {
-    //     value: {
-    //         type: Number,
-    //         required: true
-    //     },
-    //     currency: {
-    //         type: String
-    //     },
-    //     discountType: {
-    //         type: String,
-    //         enum: ["FLAT", "PERCENT", "NONE"],
-    //         required: true
-    //     },
-    //     discountedValue: {
-    //         type: Number,
-    //         required: true
-    //     }
-    // },
+// categoryId, categoryName, subCategoryName, quantity, price

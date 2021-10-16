@@ -1,4 +1,5 @@
 const ServiceModel = require("../models/service");
+const Category = require("../models/category");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 
@@ -63,23 +64,52 @@ class Service {
     async createService(req, res) {
         try {
           console.log(req.body)
-            let { name, vendorId, subType,price, quantity} = req.body;
-            if(!name || !vendorId  || !subType || !price || !quantity){
-                return res.status(500).json({ result: "Data Missing", msg: "Error"});
+            let { categoryId, category, subCategory, quantity, price } = req.body;
+            if( !category || !subCategory || !quantity || !price ){
+                return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
+              console.log("inside else")
                 let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
                 let user = await User.findOne({mobileNo: decoded.data});
+                console.log(user)
+                let newCategory = category.charAt(0).toUpperCase() + category.slice(1);
                 if(user) {
-                    let service = new ServiceModel({
-                        name,
-                        vendorId,
-                        // mobileNo,
-                        // email,
-                        // address,
-                        // type,
-                        subType,
-                        price,
-                        quantity
+                  if(categoryId === null){
+                    console.log("iin NULL")
+                    let createCategory = new Category({
+                      name: category,
+                      user: user._id
+                    })
+                    await createCategory.save().then(async(cat) => {
+                      console.log("New Category is Being Created...")
+                      console.log(cat)
+                      let service = new ServiceModel({
+                        categoryId: cat._id,
+                        category: newCategory,
+                        user: user._id,
+                        subCategory,
+                        quantity,
+                        price
+                      })
+                      console.log(service)
+                      await service.save().then(async(result) => {
+                          console.log("Service Created Successfully... Updating User Services...")
+                          await User.updateOne({mobileNo: decoded.data}, {$push: {myServices: result._id}})
+                          .then( user => {
+                              console.log("User Updated Successfully")
+                              return res.status(200).json({ result: result, msg: "Success"});
+                          })
+                      })
+                    })
+                  }
+                      let service = new ServiceModel({
+                      categoryId,
+                      category: newCategory,
+                      user: user._id,
+                      subCategory,
+                      quantity,
+                      price
+
                     })
                     await service.save().then(async(result) => {
                         console.log("Service Created Successfully... Updating User Services...")

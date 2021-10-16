@@ -4,6 +4,19 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema.Types;
 const { update } = require("../models/user");
+const schedule = require('node-schedule');
+
+const date = "2021-10-14T18:39:00.943Z";
+const dat1 = "2021-10-14T18:40:00.943Z";
+
+
+const job = schedule.scheduleJob(date, function(){
+  console.log('1111111111111111111111111111111.');
+});
+const job2 = schedule.scheduleJob(dat1, function(){
+  console.log('22222222222222222222222222222222.');
+});
+
 
 
 class Event {
@@ -101,6 +114,20 @@ class Event {
                         subs: user._id
                     })
                     await event.save().then(async(result) => {
+                      const startEvent = schedule.scheduleJob(start, async () => {
+                        let changeStatus = await eventModel.updateOne({_id: result._id}, {$set: {status: "Live"}})
+                        .then((doc)=> {
+                          console.log(doc)
+                          console.log("Event Started")
+                        })
+                      })
+                      const endEvent = schedule.scheduleJob(end, async () => {
+                        let changeStatus = await eventModel.updateOne({_id: result._id}, {$set: {status: "Over"}})
+                        .then((doc)=> {
+                          console.log(doc)
+                          console.log("Event Over")
+                        })
+                      })
                         console.log("Event Created Successfully... Updating User Events...")
                         await User.updateOne({mobileNo: decoded.data}, {$addToSet: {myEvents: result._id}})
                         .then( user => {

@@ -14,16 +14,19 @@ const userSchema = new mongoose.Schema(
       match: /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/,
     },
     mobileNo: {
-      type: Number,
+      type: String,
       unique: true ,
       require: true,
-      // match: /^([+][9][1]|[9][1]|[0]){0,1}([7-9]{1})([0-9]{9})$/
     },
     address: {
       type: String,
       default: null
     },
     organisation: {
+      type: String,
+      default: null
+    },
+    img: {
       type: String,
       default: null
     },

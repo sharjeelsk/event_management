@@ -23,7 +23,7 @@ class User {
         console.log(decoded)
         let User = await userModel
           .findOne({mobileNo: decoded.data})
-          .select("name email mobileNo address organisation myEvent joinedEvents myBids")
+          .select("name email mobileNo address organisation myEvent joinedEvents myBids img")
           .populate({path: 'myEvents myBids myServices', options: { sort: {'createdAt': -1} }});
         if (User) {
           return res.status(200).json({ result: User, msg: "Success"});
@@ -70,6 +70,41 @@ class User {
 //       });
 //     }
 //   }
+
+  async upload(req, res) {
+    try {
+      let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
+      let user = await userModel.findOne({mobileNo: decoded.data});
+      if(user){
+        res.json({file: req.file})
+      } 
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+  async getAllUploads(req, res) {
+    try {
+      let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
+      let user = await userModel.findOne({mobileNo: decoded.data});
+      if(user){
+        gfs.find().toArray((err, files) => {
+          if(!files || files.length === 0){
+            return res.status(404).json({
+              err: "no file exist"
+            });
+          }
+          
+          return res.json(files);
+        })
+      } 
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
 
 }
 
