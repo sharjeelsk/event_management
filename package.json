@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon index"
   },
   "author": "Techgeeks",
   "license": "ISC",
@@ -23,6 +23,7 @@
     "multer-gridfs-storage": "^5.0.2",
     "node-schedule": "^2.0.0",
     "nodemon": "^2.0.12",
+    "socket.io": "^4.3.0",
     "twilio": "^3.67.2"
   }
 }

@@ -5,18 +5,29 @@ const cors = require("cors");
 const mongoose = require("mongoose")
 const morgan = require("morgan")
 const jwt = require("jsonwebtoken");
+const http = require("http")
 const app = express()
+const socketio = require("socket.io")
+const server = http.createServer(app)
+const io = socketio(server);
 
-
+//uploads
 const path = require('path')
 const multer = require("multer");
 const {GridFsStorage} = require("multer-gridfs-storage");
 const Grid = require("gridfs-stream")
 const crypto = require("crypto")
 
+
 const User = require("./server/models/user");
 
 const PORT = process.env.PORT || 3000;
+
+//Socket
+io.on("connection", socket => {
+  console.log(socket.id)
+  io.emit("Welcome","diahdojasnk")
+})
 
 // Database Connection
 mongoose
@@ -93,6 +104,8 @@ app.use("/api/service", require("./server/routes/service"));
 app.use("/api/event", require("./server/routes/event"))
 app.use("/api/bid", require("./server/routes/bid"))
 app.use("/api/category", require("./server/routes/category"))
+app.use("/api/conv", require("./server/routes/conversation"))
+app.use("/api/msg", require("./server/routes/message"))
 
 
 app.get("/test", (req,res) => {
@@ -195,7 +208,7 @@ app.get("/api/user/image/:filename", async (req, res) => {
 
 
 // Run Server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log("Server is running on ", PORT);
 });
 
