@@ -265,6 +265,34 @@ class Event {
           return res.status(500).json({ result: err, msg: "Error"});
         }
   }
+
+  async getBidedEvent(req, res) {
+    try {
+            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
+            let user = await User.findOne({mobileNo: decoded.data})
+                        .populate({
+                          path: "bidedEvent",
+                          model: "Event",
+                          populate: {
+                            path: "bids",
+                            model: "Bid",
+                            populate: {
+                              path: "userId",
+                              model: "User"
+                            }
+                          }
+                        })
+                        // .select("bidedEvent");
+            if(user) {
+                  return res.status(200).json({ result: user, msg: "Success" });
+            } else {
+                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
+            }
+      } catch (err) {
+        console.log(err)
+        return res.status(500).json({ result: err, msg: "Error"});
+      }
+    }
 }
 
 const eventController = new Event();

@@ -12,5 +12,6 @@ router.post("/delete-event", eventController.deleteEvent);
 
 router.post("/join-event", eventController.joinEvent);
 router.post("/unsub-event", eventController.unSubEvent);
+router.get("/bided-event", eventController.getBidedEvent);
 
 module.exports = router;

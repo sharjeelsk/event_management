@@ -68,6 +68,7 @@ const storage = new GridFsStorage({
           return reject(err);
         }
         const filename = buf.toString('hex') + path.extname(file.originalname);
+        console.log(filename)
         const fileInfo = {
           filename: filename,
           bucketName: 'uploads'
@@ -112,8 +113,9 @@ app.get("/test", (req,res) => {
   res.send("hello")
 })
 
-app.post("/api/user/upload", upload.single("file"),  async (req, res) => {
+app.post("/api/user/upload", upload.single("image"),  async (req, res) => {
   try {
+     console.log(req.file)
     let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
     let user = await User.findOne({mobileNo: decoded.data});
     if(user){
@@ -133,21 +135,20 @@ app.post("/api/user/upload", upload.single("file"),  async (req, res) => {
 
 app.get("/api/user/uploads", async (req, res) => {
   try {
-    let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-    let user = await User.findOne({mobileNo: decoded.data});
-    if(user){
+    // let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
+    // let user = await User.findOne({mobileNo: decoded.data});
+    // if(user){
       gfs.files.find().toArray((err, files) => {
         if(!files || files.length === 0){
           return res.status(404).json({
             err: "no file exist"
           });
-        } else {
-          return res.status(500).json({ result: "UnAuthorised", msg: "Error"});
-        }
+        } 
+        
         
         return res.json(files);
       })
-    } 
+    // } 
   } catch (err) {
     console.log(err)
     return res.status(500).json({ result: err, msg: "Error"});
@@ -179,17 +180,18 @@ app.get("/api/user/uploads/:filename", async (req, res) => {
 
 app.get("/api/user/image/:filename", async (req, res) => {
   try {
-    let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-    let user = await User.findOne({mobileNo: decoded.data});
-    if(user){
+    // let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
+    // let user = await User.findOne({mobileNo: decoded.data});
+    // if(user){
       gfs.files.findOne({filename: req.params.filename} , (err, file) => {
         if(!file || file.length === 0){
           return res.status(404).json({
             err: "no file exist"
           });
         }
-        if(file.contentType === "image/jpeg" || file.contentType === "img/png"){
+        if(file.contentType === "image/jpeg" || file.contentType === "image/png" || file.contentType === "image/jpg"){
           const readstream = gfs.createReadStream(file.filename);
+          console.log(typeof(readstream))
           readstream.pipe(res);
         } else {
           res.status(404).json({
@@ -197,9 +199,10 @@ app.get("/api/user/image/:filename", async (req, res) => {
           });
         }
       })
-    }  else {
-      return res.status(500).json({ result: "UnAuthorised", msg: "Error"});
-    }
+    // }  
+    // else {
+    //   return res.status(500).json({ result: "UnAuthorised", msg: "Error"});
+    // }
   } catch (err) {
     console.log(err)
     return res.status(500).json({ result: err, msg: "Error"});

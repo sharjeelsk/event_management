@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema(
     myBids: [{
       type: ObjectId, ref: "Bid"
     }],
+    bidedEvent: [{
+      type: ObjectId, ref: "Event"
+    }],
+
 
   },
   { timestamps: true }
