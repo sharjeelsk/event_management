@@ -8,18 +8,11 @@ class Bid {
 
     async getAllBid(req, res) {
         try {
-            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-            let user = await User.findOne({mobileNo: decoded.data});
-            if(user){
-                let bids = await bidModel.find({})
-              // .populate()
+            let bids = await bidModel.find({})
               .sort({ _id: -1 });
             if (bids) {
               return res.status(200).json({ result: bids, msg: "Success"});
                 }
-            } else {
-                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-            }
           } catch (err) {
             return res.status(500).json({ result: err, msg: "Error"});
           }
@@ -28,18 +21,11 @@ class Bid {
 
     async getSingleBid(req, res) {
         try {
-            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-            let user = await User.findOne({mobileNo: decoded.data});
-            if(user){
-                let {bidId} = req.body
-                let bid = await bidModel.findOne({_id: bidId})
-              // .populate()
+            let {bidId} = req.body
+            let bid = await bidModel.findOne({_id: bidId})
             if (bid) {
               return res.status(200).json({ result: bid, msg: "Success"});
                 }
-            } else {
-                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-            }
           } catch (err) {
               console.log(err)
             return res.status(500).json({ result: err, msg: "Error"});
@@ -49,15 +35,11 @@ class Bid {
 
     async getUserBid(req, res) {
         try {
-            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-            let user = await User.findOne({mobileNo: decoded.data})
+            let user = await User.findOne({mobileNo: req.user.mobileNo})
                         .populate("myBids")
                         .select("myBids")
-                        
             if(user){
                 return res.status(200).json({ result: user, msg: "Success"});
-            } else {
-                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
             }
           } catch (err) {
             return res.status(500).json({ result: err, msg: "Error"});
@@ -67,23 +49,21 @@ class Bid {
     async createBid(req, res) {
         try {
             let { eventId, services, totalPrice, description} = req.body;
+            let userId = req.user._id;
             if(!eventId || !services || !totalPrice || !description){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-                let user = await User.findOne({mobileNo: decoded.data});
-                if(user) {
                     let event = await Event.findOne({_id: eventId})
                                 .populate({path:'bids', select:'userId'})
                     let bider;
                     await event.bids.forEach(bid => {
-                          bider = bid.userId.equals(user._id)
+                          bider = bid.userId.equals(userId)
                             if(bider === true){
                                 return false
                             }
                         });
                         console.log(bider)
-                    let condition = event.organiserId.equals(user._id)
+                    let condition = event.organiserId.equals(userId)
                     if(condition === true){
                         return res.status(200).json({ result: "Orgainser Cant Bid", msg: "Success"});
                     } else if (bider === true) {
@@ -92,7 +72,7 @@ class Bid {
                         
                         let bid = new bidModel({
                             eventId,
-                            userId: user._id,
+                            userId: userId,
                             services,
                             totalPrice,
                             description
@@ -100,14 +80,14 @@ class Bid {
                         await bid.save().then(async(result) => {
                             let query = {
                                 _id: eventId,
-                                bids: {$ne: user._id}
+                                bids: {$ne: userId}
                                  };
                             let eventInc = await Event.updateOne(query, {$inc: {totalBids: "+1", totalSubs: "+1"}})
                             console.log("Bid Created Successfully... Updating User and Event...")
-                            await Event.updateOne({_id: eventId}, {$addToSet: {bids: result._id, subs: user._id}})
+                            await Event.updateOne({_id: eventId}, {$addToSet: {bids: result._id, subs: userId}})
                             .then( async () => {
                                 console.log("Event Updated Successfully")
-                                await User.updateOne({mobileNo: decoded.data}, {$addToSet: {myBids: result._id, myEvents: eventId, bidedEvent: eventId}})
+                                await User.updateOne({mobileNo: req.user.mobileNo}, {$addToSet: {myBids: result._id, myEvents: eventId, bidedEvent: eventId}})
                                 .then( (updatedUser) => {
                                     console.log("User Updated Successfully")
                                 return res.status(200).json({ result: updatedUser, msg: "Success"});
@@ -115,9 +95,6 @@ class Bid {
                             })
                         })
                     }
-                } else {
-                    return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-                }
             }
           } catch (err) {
             console.log(err)
@@ -127,10 +104,7 @@ class Bid {
 
     async updateBid(req, res) {
         try {
-            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
             let { bidId } = req.body;
-            let user = await User.findOne({mobileNo: decoded.data});
-            if(user) {
                 if(!bidId){
                     return res.status(500).json({ result: "Data Missing", msg: "Error"});
                 } else {
@@ -146,9 +120,6 @@ class Bid {
                           return res.status(200).json({ result: currentBid, msg: "Success" });
                         }
                 }
-            } else {
-                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-            }
           } catch (err) {
             console.log(err)
             return res.status(500).json({ result: err, msg: "Error"});
@@ -161,22 +132,18 @@ class Bid {
             if(!bidId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-                let user = await User.findOne({mobileNo: decoded.data})
-                if(user) {
-                    await bidModel.findOneAndDelete({_id: bidId})
+                    await bidModel.remove({_id: bidId})
                     .then(async (deletedBid) => {
-                        await User.updateOne({_id: user._id}, {$pull: {"myBids": bidId}})
-                        .then( async () => {
+                      console.log(deletedBid)
+                        await User.updateOne({_id: req.user._id}, {$pull: {"myBids": bidId, "bidedEvent": deletedBid.eventId}})
+                        .then( async (a) => {
+                          console.log(a)
                             await Event.updateOne({_id: deletedBid.eventId}, {$pull: {"bids": bidId}, $inc: {totalBids: -1}})
                             .then(()=> {
                                 return res.status(200).json({ result: deletedBid, msg: "Success" });
                             })
                         })  
                     })
-                } else {
-                    return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-                }
             }
           } catch (err) {
             console.log(err)
@@ -190,18 +157,10 @@ class Bid {
             if(!bidId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-                let user = await User.findOne({mobileNo: decoded.data});
-                if(user) {
                         let approvedBid = await bidModel.updateOne({_id: bidId}, {$set: {status: "Approved"}})
                         if(approvedBid) {
-                            
                                 return res.status(200).json({ result: approvedBid, msg: "Success" });
-                            
                         }
-                } else {
-                    return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-                }
             }
           } catch (err) {
             console.log(err)

@@ -6,7 +6,6 @@ class User {
     try {
       let Users = await userModel
         .find({})
-        // .populate()
         .sort({ _id: -1 });
       if (Users) {
         return res.status(200).json({ result: Users, msg: "Success"});
@@ -18,11 +17,8 @@ class User {
 
   async getSingleUser(req, res) {
       try {
-
-        let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-        console.log(decoded)
         let User = await userModel
-          .findOne({mobileNo: decoded.data})
+          .findOne({mobileNo: req.user.mobileNo})
           .select("name email mobileNo address organisation myEvent joinedEvents myBids img")
           .populate({path: 'myEvents myBids myServices', options: { sort: {'createdAt': -1} }});
         if (User) {
@@ -36,14 +32,11 @@ class User {
 
   async postEditUser(req, res) {
     try {
-      let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
       const updateOps = {};
       for(const ops of req.body){
           updateOps[ops.propName] = ops.value;
       }
-      console.log(updateOps)
-  
-      let currentUser = await userModel.updateOne({mobileNo: decoded.data}, {
+      let currentUser = await userModel.updateOne({mobileNo: req.user.mobileNo}, {
         $set: updateOps
       });
         if(currentUser) {
@@ -73,36 +66,72 @@ class User {
 
   async upload(req, res) {
     try {
-      let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-      let user = await userModel.findOne({mobileNo: decoded.data});
-      if(user){
-        res.json({file: req.file})
-      } 
+       await userModel.updateOne({_id: req.user._id}, {$set: {img: req.file.filename}})
+       .then(result => {console.log(result)})
+       .catch(err => {console.log(err)})
+       res.json({file: req.file})
+   } catch (err) {
+     console.log(err)
+     return res.status(500).json({ result: err, msg: "Error"});
+   }
+  }
+
+  async getAllUploads(req, res) {
+    try {
+        let gfs = require("../../index")
+        gfs.files.find().toArray((err, files) => {
+          if(!files || files.length === 0){
+            return res.status(404).json({
+              err: "no file exist"
+            });
+          }
+          return res.json(files);
+        })
     } catch (err) {
       console.log(err)
       return res.status(500).json({ result: err, msg: "Error"});
     }
   }
 
-  async getAllUploads(req, res) {
+  async getSingleUpload(req, res) {
     try {
-      let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-      let user = await userModel.findOne({mobileNo: decoded.data});
-      if(user){
-        gfs.find().toArray((err, files) => {
-          if(!files || files.length === 0){
-            return res.status(404).json({
-              err: "no file exist"
-            });
-          }
-          
-          return res.json(files);
-        })
-      } 
-    } catch (err) {
-      console.log(err)
-      return res.status(500).json({ result: err, msg: "Error"});
-    }
+      gfs.files.findOne({filename: req.params.filename} , (err, files) => {
+        if(!files || files.length === 0){
+          return res.status(404).json({
+            err: "no file exist"
+          });
+        }
+        
+        return res.json(files);
+      }) 
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({ result: err, msg: "Error"});
+  }
+  }
+
+  async getSingleImg(req, res) {
+    try {
+      let gfs = require("../../index")
+      gfs.files.findOne({filename: req.params.filename} , (err, file) => {
+        if(!file || file.length === 0){
+          return res.status(404).json({
+            err: "no file exist"
+          });
+        }
+        if(file.contentType === "image/jpeg" || file.contentType === "image/png" || file.contentType === "image/jpg"){
+          const readstream = gfs.createReadStream(file.filename);
+          readstream.pipe(res);
+        } else {
+          res.status(404).json({
+            err: "not An Image"
+          });
+        }
+      })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({ result: err, msg: "Error"});
+  }
   }
 
 

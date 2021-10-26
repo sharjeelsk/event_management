@@ -9,19 +9,13 @@ class Service {
 
     async getAllServices(req, res) {
         try {
-            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-            let user = await User.findOne({mobileNo: decoded.data});
-            if(user){
-                let services = await ServiceModel.find({})
-              // .populate()
+            let services = await ServiceModel.find({})
               .sort({ _id: -1 });
             if (services) {
               return res.status(200).json({ result: services, msg: "Success"});
-                }
-            } else {
-                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
             }
           } catch (err) {
+            console.log(err)
             return res.status(500).json({ result: err, msg: "Error"});
           }
     }
@@ -29,18 +23,11 @@ class Service {
 
     async getSingleService(req, res) {
         try {
-            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-            let user = await User.findOne({mobileNo: decoded.data});
-            if(user){
-                let {serviceId} = req.body
-                let services = await ServiceModel.findOne({_id: serviceId})
-              // .populate()
+            let {serviceId} = req.body
+            let services = await ServiceModel.findOne({_id: serviceId})
             if (services) {
               return res.status(200).json({ result: services, msg: "Success"});
                 }
-            } else {
-                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-            }
           } catch (err) {
             return res.status(500).json({ result: err, msg: "Error"});
           }
@@ -49,12 +36,9 @@ class Service {
 
     async getUserService(req, res) {
         try {
-            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-            let user = await User.findOne({mobileNo: decoded.data}).populate("myServices");
+            let user = await User.findOne({mobileNo: req.user.mobileNo}).populate("myServices");
             if(user){
                 return res.status(200).json({ result: user.myServices, msg: "Success"});
-            } else {
-                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
             }
           } catch (err) {
             return res.status(500).json({ result: err, msg: "Error"});
@@ -63,22 +47,16 @@ class Service {
 
     async createService(req, res) {
         try {
-          console.log(req.body)
             let { categoryId, category, subCategory, quantity, price } = req.body;
             if( !category || !subCategory || !quantity || !price ){
                 return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
-              console.log("inside else")
-                let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-                let user = await User.findOne({mobileNo: decoded.data});
-                console.log(user)
                 let newCategory = category.charAt(0).toUpperCase() + category.slice(1);
-                if(user) {
                   if(categoryId === null){
                     console.log("iin NULL")
                     let createCategory = new Category({
                       name: category,
-                      user: user._id
+                      user: req.user._id
                     })
                     await createCategory.save().then(async(cat) => {
                       console.log("New Category is Being Created...")
@@ -86,15 +64,14 @@ class Service {
                       let service = new ServiceModel({
                         categoryId: cat._id,
                         category: newCategory,
-                        user: user._id,
+                        user: req.user._id,
                         subCategory,
                         quantity,
                         price
                       })
-                      console.log(service)
                       await service.save().then(async(result) => {
                           console.log("Service Created Successfully... Updating User Services...")
-                          await User.updateOne({mobileNo: decoded.data}, {$push: {myServices: result._id}})
+                          await User.updateOne({mobileNo: req.user.mobileNo}, {$push: {myServices: result._id}})
                           .then( user => {
                               console.log("User Updated Successfully")
                               return res.status(200).json({ result: result, msg: "Success"});
@@ -105,7 +82,7 @@ class Service {
                       let service = new ServiceModel({
                       categoryId,
                       category: newCategory,
-                      user: user._id,
+                      user: req.user._id,
                       subCategory,
                       quantity,
                       price
@@ -113,15 +90,12 @@ class Service {
                     })
                     await service.save().then(async(result) => {
                         console.log("Service Created Successfully... Updating User Services...")
-                        await User.updateOne({mobileNo: decoded.data}, {$push: {myServices: result._id}})
+                        await User.updateOne({mobileNo: req.user.mobileNo}, {$push: {myServices: result._id}})
                         .then( user => {
                             console.log("User Updated Successfully")
                             return res.status(200).json({ result: result, msg: "Success"});
                         })
                     })
-                } else {
-                    return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-                }
             }
           } catch (err) {
             console.log(err)
@@ -131,10 +105,7 @@ class Service {
 
     async updateService(req, res) {
         try {
-            let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
             let { serviceId } = req.body;
-            let user = await User.findOne({mobileNo: decoded.data});
-            if(user) {
                 if(!serviceId){
                     return res.status(500).json({ result: "Data Missing", msg: "Error"});
                 } else {
@@ -150,9 +121,6 @@ class Service {
                           return res.status(200).json({ result: currentService, msg: "Success" });
                         }
                 }
-            } else {
-                return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-            }
           } catch (err) {
             console.log(err)
             return res.status(500).json({ result: err, msg: "Error"});
@@ -165,16 +133,10 @@ class Service {
             if(!serviceId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-                let user = await User.findOne({mobileNo: decoded.data});
-                if(user) {
                     let deletedService = await ServiceModel.deleteOne({_id: serviceId})
                       if(deletedService) {
                         return res.status(200).json({ result: deletedService, msg: "Success" });
                       }
-                } else {
-                    return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-                }
             }
           } catch (err) {
             console.log(err)

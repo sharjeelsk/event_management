@@ -13,20 +13,13 @@ class Message {
             if( !text || !conversationId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-                let user = await User.findOne({mobileNo: decoded.data});
-                if(user) {
                     let newMessage = new messageModel({
                         conversationId,
-                        sender: user._id,
+                        sender: req.user._id,
                         text 
                     });
-
-                    let savedMsg = await newMessage.save();
-                    return res.status(200).json({ result: savedMsg, msg: "Success"});
-                } else {
-                    return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-                }
+                let savedMsg = await newMessage.save();
+                return res.status(200).json({ result: savedMsg, msg: "Success"});
             }
           } catch (err) {
             console.log(err)
@@ -40,16 +33,11 @@ class Message {
             if( !conversationId ){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-                let user = await User.findOne({mobileNo: decoded.data});
-                if(user) {
                     let messages = await messageModel.find({
                         conversationId: conversationId
                     })
                     return res.status(200).json({ result: messages, msg: "Success"});
-                } else {
-                    return res.status(400).json({ result: "Unauthorised", msg: "Error"});
-                }
+
             }
           } catch (err) {
             console.log(err)
