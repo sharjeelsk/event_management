@@ -19,7 +19,7 @@ class User {
       try {
         let User = await userModel
           .findOne({mobileNo: req.user.mobileNo})
-          .select("name email mobileNo address organisation myEvent joinedEvents myBids img")
+          .select("name email mobileNo address organisation myEvents myBids myServices bidedEvent img")
           .populate({path: 'myEvents myBids myServices', options: { sort: {'createdAt': -1} }});
         if (User) {
           return res.status(200).json({ result: User, msg: "Success"});
