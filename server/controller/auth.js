@@ -31,7 +31,7 @@ class Auth {
     //   })
     //   .then((messages) => console.log(messages))
     //   .catch((err) => console.error(err));
-  
+    console.log("OTP:" +""+otp)
     res.status(200).send({ phone, hash: fullHash, otp });  // this bypass otp via api only for development instead hitting twilio api all the time
     // res.status(200).send({ 
     //   phone,

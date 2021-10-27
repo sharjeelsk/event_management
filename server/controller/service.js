@@ -51,6 +51,7 @@ class Service {
             if( !category || !subCategory || !quantity || !price ){
                 return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
+              console.log(req.body)
                 let newCategory = category.charAt(0).toUpperCase() + category.slice(1);
                   if(categoryId === null){
                     console.log("iin NULL")

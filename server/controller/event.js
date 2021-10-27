@@ -34,6 +34,26 @@ class Event {
           }
     }
 
+    async allEventBids(req, res) {
+      try {
+          let events = await eventModel.find({})
+            .sort({ _id: -1 })
+            .populate([{
+              path: "bids",
+              model: "Bid",
+              populate: {
+                path: "userId",
+                model: "User"
+              }
+            },
+          ])
+          if (events) {
+            return res.status(200).json({ result: events, msg: "Success"});
+              }
+        } catch (err) {
+          return res.status(500).json({ result: err, msg: "Error"});
+        }
+  }
 
     async getSingleEvent(req, res) {
         try {

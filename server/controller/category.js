@@ -8,7 +8,7 @@ class Category {
 
     async getAllCategory(req, res) {
         try {
-                let categories = await categoryModel.find({}).sort({ createdAt: -1 });
+                let categories = await categoryModel.find().sort({ createdAt: -1 });
                 if(categories){
                     return res.status(200).json({ result: categories, msg: "Success"});
                 }
