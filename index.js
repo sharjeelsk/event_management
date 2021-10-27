@@ -20,12 +20,7 @@ const Grid = require("gridfs-stream")
 app.use(morgan("dev"));
 app.use(bodyParser.json())
 app.use(cors());
-if(process.env.NODE_ENV==='production'){
-  app.use(express.static('client/build'));
-  app.get('*',(req,res)=>{
-      res.sendFile(path.resolve(__dirname,'client','build','index.html'))
-  })
-}
+
 //app.use(express.static("public"));
 //app.use(express.urlencoded({ extended: false }));
 //app.use(express.json());
@@ -76,7 +71,7 @@ app.use("/api/conv", require("./server/routes/conversation"))
 app.use("/api/msg", require("./server/routes/message"))
 
 
-app.get("/test", (req,res) => {
+app.get("/", (req,res) => {
   res.send("hello")
 })
 
