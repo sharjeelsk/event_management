@@ -6,6 +6,7 @@ const mongoose = require("mongoose")
 const morgan = require("morgan")
 const http = require("http")
 const app = express()
+app.use(cors());
 const socketio = require("socket.io")
 const server = http.createServer(app)
 const io = socketio(server);
@@ -19,7 +20,7 @@ const Grid = require("gridfs-stream")
 // Middleware
 app.use(morgan("dev"));
 app.use(bodyParser.json())
-app.use(cors());
+
 
 //app.use(express.static("public"));
 //app.use(express.urlencoded({ extended: false }));
