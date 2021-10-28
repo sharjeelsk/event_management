@@ -10,7 +10,7 @@ const socketio = require("socket.io")
 const server = http.createServer(app)
 const io = socketio(server);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 
 //uploads
 const path = require('path')
@@ -69,6 +69,7 @@ app.use("/api/bid", require("./server/routes/bid"))
 app.use("/api/category", require("./server/routes/category"))
 app.use("/api/conv", require("./server/routes/conversation"))
 app.use("/api/msg", require("./server/routes/message"))
+app.use("/api/report", require("./server/routes/report"))
 
 
 

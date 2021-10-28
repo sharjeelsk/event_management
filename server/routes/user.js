@@ -39,7 +39,7 @@ router.post("/edit-user", isAuthorized, usersController.postEditUser);
 router.post("/upload", isAuthorized, upload.single("image"), usersController.upload)
 router.get("/uploads", isAuthorized, usersController.getAllUploads)
 router.get("/uploads/:filename", isAuthorized, usersController.getSingleUpload)
-router.get("/image/:filename", isAuthorized, usersController.getSingleImg)
+router.get("/image/:filename", usersController.getSingleImg)
 
 
 module.exports = router;
