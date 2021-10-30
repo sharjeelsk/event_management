@@ -4,7 +4,7 @@ const bidController = require("../controller/bid");
 const { isAuthorized } = require("../middleware/reqAuth");
 
 router.get("/all-bid", isAuthorized, bidController.getAllBid);
-router.get("/single-bid", isAuthorized, bidController.getSingleBid);
+router.post("/single-bid", isAuthorized, bidController.getSingleBid);
 router.get("/user-bid", isAuthorized, bidController.getUserBid);
 
 router.post("/create-bid", isAuthorized, bidController.createBid);
