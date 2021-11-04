@@ -134,6 +134,29 @@ class User {
   }
   }
 
+  async getMyApprovals(req, res) {
+    try {
+      let User = await userModel
+        .findOne({_id: req.user._id})
+        .select("myApprovals")
+        .populate({
+          path: "myApprovals.bid",
+          model: "Bid",
+          populate: {
+            path: "userId",
+            model: "User",
+            select: ("name _id")
+          }
+        });
+      if (User) {
+        return res.status(200).json({ result: User, msg: "Success"});
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
 
 }
 

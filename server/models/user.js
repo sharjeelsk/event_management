@@ -42,6 +42,21 @@ const userSchema = new mongoose.Schema(
     bidedEvent: [{
       type: ObjectId, ref: "Event"
     }],
+    myApprovals: [{
+      name: {
+        type: String,
+        require: true
+      },
+      bid: {
+        type: ObjectId, ref: "Bid",
+        unique: true
+      }
+    }],
+    contactId: {
+      // type: ObjectId, ref: "userContact",
+      type: String,
+      default: null
+    }
 
 
   },

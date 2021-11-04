@@ -160,9 +160,20 @@ class Bid {
             if(!bidId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                        let approvedBid = await bidModel.updateOne({_id: bidId}, {$set: {status: "Approved"}})
+                        let approvedBid = await bidModel.findByIdAndUpdate({_id: bidId}, {$set: {status: "Approved"}})
                         if(approvedBid) {
+                          console.log("status Changed")
+                          let foundEvent = await Event.findOne({_id: approvedBid.eventId})
+                          if(foundEvent) {
+                            console.log(foundEvent.name)
+                            let newBid = {
+                              name: foundEvent.name,
+                              bid: approvedBid._id
+                            }
+                            console.log(newBid)
+                            await User.updateOne({_id: req.user._id}, { $addToSet: {myApprovals: newBid} })
                                 return res.status(200).json({ result: approvedBid, msg: "Success" });
+                          }
                         }
             }
           } catch (err) {

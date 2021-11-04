@@ -71,6 +71,7 @@ app.use("/api/category", require("./server/routes/category"))
 app.use("/api/conv", require("./server/routes/conversation"))
 app.use("/api/msg", require("./server/routes/message"))
 app.use("/api/report", require("./server/routes/report"))
+app.use("/api/userContact", require("./server/routes/userContact"))
 
 
 
