@@ -97,7 +97,7 @@ class Event {
             } else {
               // console.log(start)
               // console.log(end)
-              consoel.log(req.body.contacts)
+              console.log(req.body.contacts)
               let contactList;
                 if(type === "PRIVATE"){
                   let { contacts }= req.body;
