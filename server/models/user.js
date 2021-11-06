@@ -56,6 +56,10 @@ const userSchema = new mongoose.Schema(
       // type: ObjectId, ref: "userContact",
       type: String,
       default: null
+    },
+    expoPushToken: {
+      type: String,
+      default: null
     }
 
 

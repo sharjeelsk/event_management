@@ -8,4 +8,6 @@ router.get("/all-userContact", isAuthorized, userContactController.getAllUserCon
 router.get("/single-userContact", isAuthorized, userContactController.getSingleUserContact);
 router.post("/create-userContact", isAuthorized, userContactController.createUserContact);
 
+router.post("/delete-group", isAuthorized, userContactController.deleteGroup);
+
 module.exports = router;

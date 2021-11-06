@@ -9,13 +9,19 @@ const app = express()
 app.use(cors());
 const socketio = require("socket.io")
 const server = http.createServer(app)
-const io = socketio(server);
+const io = socketio(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
 
 const PORT = process.env.PORT || 3002;
 
 //uploads
 const path = require('path')
-const Grid = require("gridfs-stream")
+const Grid = require("gridfs-stream");
+const { Message } = require("twilio/lib/twiml/MessagingResponse");
 
 // Middleware
 app.use(morgan("dev"));
@@ -26,10 +32,38 @@ app.use(bodyParser.json())
 //app.use(express.urlencoded({ extended: false }));
 //app.use(express.json());
 
+
+// Models
+let messageModel = require("./server/models/message")
+
 //Socket
 io.on("connection", socket => {
-  console.log(socket.id)
-  io.emit("Welcome","diahdojasnk")
+  console.log(`User Connected: ${socket.id}`);
+
+  socket.on("join_room", (data) => {
+    socket.join(data);
+    console.log(`User with ID: ${socket.id} joined room: ${data}`);
+  });
+
+  socket.on("send_message",(data) => {
+    console.log(data)
+    let newMessage = new messageModel({
+      conversationId: data.room,
+      sender: "616e732c8efb4d3e8cfd15d2",
+      text : data.message
+  });
+    newMessage.save();
+    socket.to(data.room).emit("receive_message", data);
+  });
+
+  socket.on("all-messages", (data) => {
+    console.log(data)
+    socket.to(data.room).emit("receive_message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User Disconnected", socket.id);
+  });
 })
 
 // Database Connection

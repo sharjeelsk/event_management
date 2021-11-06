@@ -73,6 +73,7 @@ const eventSchema = new mongoose.Schema(
             //Embed neccessary info
             type: ObjectId, ref: "User"
             }],
+        members: [],
         },
     { timestamps: true }
 );

@@ -1,6 +1,7 @@
 const contactModel = require("../models/userContact");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+const userContact = require("../models/userContact");
 
 class UserContact {
 
@@ -37,10 +38,10 @@ class UserContact {
         try {
           // let groupName = "Friends";
           // let list = {
-          //   "+917020181351":"fida",
-          //   "+917020181352":"sharjeel",
-          //   "+917020181353":"hassan",
-          //   "+917020181355":"aquib"
+            // "+917020181351":"fida",
+            // "+917020181352":"sharjeel",
+            // "+917020181353":"hassan",
+            // "+917020181355":"aquib"
           // }
             let { groupName, list } = req.body;
             if(!groupName || !list){
@@ -100,6 +101,24 @@ class UserContact {
           }
     }
 
+    async deleteGroup(req, res) {
+      try {
+          let { groupName } = req.body;
+          if(!groupName){
+              return res.status(500).json({ result: "Data Missing", msg: "Error"});
+          } else {
+              let userContact = await contactModel.updateOne({_id: req.user.contactId}, {$pull: {groups: {groupName: groupName}}})
+              if(userContact) {
+                console.log(userContact)
+                return res.status(200).json({ result: userContact.nModified, msg: "Success" });
+              }
+          }
+        } catch (err) {
+          console.log(err)
+          return res.status(500).json({ result: err, msg: "Error"});
+        }
+  }
+
     // async updateCategory(req, res) {
     //     try {
     //         let { contactId } = req.body;
@@ -139,6 +158,7 @@ class UserContact {
     //         return res.status(500).json({ result: err, msg: "Error"});
     //       }
     // }
+
 }
 
 const userContactController = new UserContact();

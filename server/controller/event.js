@@ -95,8 +95,22 @@ class Event {
             if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-              console.log(start)
-              console.log(end)
+              // console.log(start)
+              // console.log(end)
+              consoel.log(req.body.contacts)
+              let contactList;
+                if(type === "PRIVATE"){
+                  let { contacts }= req.body;
+                  contactList = contacts
+                } else{
+                  contactList = []
+                }
+                  // if type === "PRIVATE" then request ContactId and Groups
+                  ///take ContactId and groups Array and set it on events Members field
+                  // run a function on userCOntactId groups for sending notification to existing customer
+                  // and sms to non existing user
+
+
                     let event = new eventModel({
                         organiserId: req.user._id,
                         mobileNo, 
@@ -111,7 +125,8 @@ class Event {
                         reqServices,
                         totalSubs: 1,
                         eventAddress,
-                        subs: req.user._id
+                        subs: req.user._id,
+                        members: contactList
                     })
                     await event.save().then(async(result) => {
                       const startEvent = schedule.scheduleJob(start, async () => {
@@ -132,6 +147,9 @@ class Event {
                         await User.updateOne({mobileNo: req.user.mobileNo}, {$addToSet: {myEvents: result._id}})
                         .then( user => {
                             console.log("User Updated Successfully")
+
+                            addUsersToEvent(result.members, result._id, req.user._id)
+
                             return res.status(200).json({ result: result, msg: "Success"});
                         })
                         .catch(err=>{
@@ -264,7 +282,38 @@ class Event {
         return res.status(500).json({ result: err, msg: "Error"});
       }
     }
+
+
 }
+
+function addUsersToEvent(contacts, eventId, userId) {
+  try {
+    let contactArray = Object.keys(contacts[0])
+    contactArray.forEach( async (contact) => {
+      let user = await User.findOne({mobileNo: contact})
+      if(user === null || !user){
+        // Send Sms to Contatct
+        console.log(`sms send to ${contact}`)
+      } else if(user){
+        // var query = {
+        //   _id: eventId,
+        //   subs: {$ne: userId}
+        //    };
+        //  let eventInc = await eventModel.updateOne(query, {$inc: {totalSubs: "+1"}})
+          let updatedUser = await User.findOneAndUpdate({mobileNo: contact}, {$addToSet: {myEvents: eventId}})
+           if(updatedUser) {
+             console.log(updatedUser._id)
+            let updatedEvent = await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: updatedUser._id}, $inc: {totalSubs: "+1"}})
+            // console.log(updatedEvent)
+            console.log("User And Event Updated... Sending Notification...")
+           }
+      }
+    })
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
 
 const eventController = new Event();
 module.exports = eventController;
