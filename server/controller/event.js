@@ -239,12 +239,12 @@ class Event {
           if(!eventId){
               return res.status(500).json({ result: "Data Missing", msg: "Error"});
           } else {
-                      var query = {
-                       _id: eventId,
-                       subs: {$ne: req.user._id}
-                        };
-                      let eventInc = await eventModel.updateOne(query, {$inc: {totalSubs: "-1"}})
-                      let updatedEvent = await eventModel.updateOne({_id: eventId}, {$pull: {subs: req.user._id}})
+                      // var query = {
+                      //  _id: eventId,
+                      //  subs: {$ne: req.user._id}
+                      //   };
+                      // let eventInc = await eventModel.updateOne(query, {$inc: {totalSubs: "-1"}})
+                      let updatedEvent = await eventModel.updateOne({_id: eventId}, {$pull: {subs: req.user._id}, $inc: {totalSubs: "-1"}})
                       if(updatedEvent) {
                           let updatedUser= await User.updateOne({_id: req.user._id}, {$pull: {myEvents: eventId}})
                           if(updatedUser){
