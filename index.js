@@ -1,5 +1,6 @@
 require("dotenv").config()
 const express = require("express")
+const fetch = require("node-fetch");
 const bodyParser = require('body-parser')
 const cors = require("cors");
 const mongoose = require("mongoose")
@@ -111,6 +112,31 @@ app.use("/api/userContact", require("./server/routes/userContact"))
 
 app.get("/", (req,res) => {
   res.send("hello")
+})
+
+app.get("/notification",async (req,res)=>{
+  const expoPushToken ='ExponentPushToken[5GD_0oPtbp6mVfoWpvoJmu]'
+  const message = {
+      to: expoPushToken,
+      sound: 'default',
+      title: "There's a Pre Alert",
+      body: 'And here is the body!',
+      data: { someData: 'goes here' },
+    };
+    setTimeout(async () => {
+      await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Accept-encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(message),
+        });
+    }, 3000);
+    res.send("send")
+  
+   
 })
 
 // Run Server
