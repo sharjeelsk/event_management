@@ -291,7 +291,7 @@ class Event {
 async function addUsersToEvent(contacts, eventId, userId, eventName) {
   try {
     let contactArray = Object.keys(contacts[0])
-    let existing = [];
+    let existing = [userId];
     await contactArray.forEach( async (contact) => {
       let user = await User.findOne({mobileNo: contact})
       if(user === null || !user){
