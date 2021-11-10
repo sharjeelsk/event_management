@@ -3,8 +3,15 @@ const { ObjectId } = mongoose.Schema.Types;
 
 const ConversationSchema = new mongoose.Schema(
   {
+    name: [],
     members: {
         type: Array,
+        require: true
+    },
+    type: {
+      type: String,
+      enum: ["Single", "Group"],
+      require: true
     }
   },
   { timestamps: true }

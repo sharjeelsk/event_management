@@ -6,6 +6,8 @@ const { ObjectId } = mongoose.Schema.Types;
 const { update } = require("../models/user");
 const schedule = require('node-schedule');
 
+const Conversation = require("../models/conversation");
+
 // const date = "2021-10-14T18:39:00.943Z";
 // const dat1 = "2021-10-14T18:40:00.943Z";
 
@@ -42,7 +44,7 @@ class Event {
               path: "bids",
               model: "Bid",
               populate: {
-                path: "userId",
+                path: "organiserId",
                 model: "User"
               }
             },
@@ -148,7 +150,7 @@ class Event {
                         .then( user => {
                             console.log("User Updated Successfully")
 
-                            addUsersToEvent(result.members, result._id, req.user._id)
+                            addUsersToEvent(result.members, result._id, req.user._id, result.name)
 
                             return res.status(200).json({ result: result, msg: "Success"});
                         })
@@ -286,29 +288,37 @@ class Event {
 
 }
 
-function addUsersToEvent(contacts, eventId, userId) {
+async function addUsersToEvent(contacts, eventId, userId, eventName) {
   try {
     let contactArray = Object.keys(contacts[0])
-    contactArray.forEach( async (contact) => {
+    let existing = [];
+    await contactArray.forEach( async (contact) => {
       let user = await User.findOne({mobileNo: contact})
       if(user === null || !user){
         // Send Sms to Contatct
         console.log(`sms send to ${contact}`)
       } else if(user){
-        // var query = {
-        //   _id: eventId,
-        //   subs: {$ne: userId}
-        //    };
-        //  let eventInc = await eventModel.updateOne(query, {$inc: {totalSubs: "+1"}})
+        existing.push(user._id)
           let updatedUser = await User.findOneAndUpdate({mobileNo: contact}, {$addToSet: {myEvents: eventId}})
            if(updatedUser) {
              console.log(updatedUser._id)
             let updatedEvent = await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: updatedUser._id}, $inc: {totalSubs: "+1"}})
+
+
             // console.log(updatedEvent)
             console.log("User And Event Updated... Sending Notification...")
            }
       }
     })
+    let newConversation = new Conversation({
+      name: eventName,
+      members: existing,
+      type: "Group" // Event Group Conversation
+    })
+    newConversation.save().then(()=> {
+      console.log("Conversation Created")
+    })
+
     } catch (err) {
       console.log(err)
       return res.status(500).json({ result: err, msg: "Error"});

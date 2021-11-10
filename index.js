@@ -41,26 +41,41 @@ let messageModel = require("./server/models/message")
 io.on("connection", socket => {
   console.log(`User Connected: ${socket.id}`);
 
-  socket.on("join_room", (data) => {
+  socket.on("join_room",async (data) => {
     socket.join(data);
     console.log(`User with ID: ${socket.id} joined room: ${data}`);
+    let messages = await messageModel.find({
+      conversationId: data.toString()
+  })
+  console.log(messages)
+    io.to(data).emit("receive_message", messages);
   });
 
   socket.on("send_message",(data) => {
     console.log(data)
     let newMessage = new messageModel({
-      conversationId: data.room,
-      sender: "616e732c8efb4d3e8cfd15d2",
-      text : data.message
+      conversationId: data.conversationId,
+      sender: data.sender,
+      text : data.text
   });
-    newMessage.save();
-    socket.to(data.room).emit("receive_message", data);
+    newMessage.save()
+    .then((saved) => {
+      console.log(saved)
+      console.log("COnv ID", data.conversationId)
+      let roomId = data.conversationId;
+      io.to(roomId).emit("receive_message", saved);
+    })
+
   });
 
-  socket.on("all-messages", (data) => {
-    console.log(data)
-    socket.to(data.room).emit("receive_message", data);
-  });
+  // socket.on("all-messages",async (data) => {
+  //   console.log(data)
+  //   let messages = await messageModel.find({
+  //     conversationId: data.toString()
+  // })
+  // console.log(messages)
+  //   socket.to(data).emit("receive_message", messages);
+  // });
 
   socket.on("disconnect", () => {
     console.log("User Disconnected", socket.id);

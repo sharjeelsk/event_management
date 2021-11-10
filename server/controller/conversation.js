@@ -12,12 +12,20 @@ class Conversation {
             if( !senderId || !recieverId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                    let newConversation = new conversationModel({
+              let conversation = await conversationModel.find({members: {$all: [senderId, recieverId]}})
+              if(conversation.length != 0){
+              // console.log(conversation)
+                return res.status(200).json({ result: conversation, msg: "Success"});
+            } else {
+              // console.log("new")
+                                    let newConversation = new conversationModel({
                         members: [senderId, recieverId],
+                        type: "Single" // this is used bcoz this function is used only for creating one-to-one Conversation
                     });
 
-                    let savedCon = await newConversation.save();
-                    return res.status(200).json({ result: savedCon, msg: "Success"});
+                    let conversation = await newConversation.save();
+                    return res.status(200).json({ result: conversation, msg: "Success"});
+              }
             }
           } catch (err) {
             console.log(err)
@@ -29,6 +37,7 @@ class Conversation {
         try {
             let conversations = await conversationModel.find({members: {$in: [req.user._id.toString()]}})
             if(conversations){
+              console.log(conversations)
                 return res.status(200).json({ result: conversations, msg: "Success"});
             }
           } catch (err) {
