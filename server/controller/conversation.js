@@ -19,6 +19,7 @@ class Conversation {
             } else {
               // console.log("new")
                                     let newConversation = new conversationModel({
+                        // name: 
                         members: [senderId, recieverId],
                         type: "Single" // this is used bcoz this function is used only for creating one-to-one Conversation
                     });
