@@ -130,7 +130,7 @@ app.get("/", (req,res) => {
 })
 
 app.get("/notification",async (req,res)=>{
-  const expoPushToken ='ExponentPushToken[5GD_0oPtbp6mVfoWpvoJmu]'
+  const expoPushToken ='ExponentPushToken[wxq10DBQLsbmBjr7cuPb5P]'
   const message = {
       to: expoPushToken,
       sound: 'default',
