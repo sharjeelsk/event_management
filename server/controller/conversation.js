@@ -36,7 +36,8 @@ class Conversation {
 
     async userCon(req, res) {
         try {
-            let conversations = await conversationModel.find({members: {$in: [req.user._id.toString()]}})
+          console.log(req.user._id)
+            let conversations = await conversationModel.find({members: {$in: [req.user._id]}})
             if(conversations){
               console.log(conversations)
                 return res.status(200).json({ result: conversations, msg: "Success"});
