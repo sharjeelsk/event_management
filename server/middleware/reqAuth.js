@@ -1,9 +1,7 @@
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 module.exports.isAuthorized  = function(req, res, next) {
-    console.log(req.headers.token)
     let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-    console.log(decoded.data)
     User.findOne({mobileNo: decoded.data}).then((user) => {
         req.user = user  
             if (user === null) {     

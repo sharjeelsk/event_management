@@ -313,25 +313,25 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
            if(updatedUser) {
              console.log(updatedUser._id)
             let updatedEvent = await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: updatedUser._id}, $inc: {totalSubs: "+1"}})
+            if(updatedEvent) {
+              console.log(existing)
+              let newConversation = new Conversation({
+                name: eventName,
+                members: existing,
+                type: "Group" // Event Group Conversation
+              })
+              newConversation.save().then(()=> {
+                console.log("Conversation Created.. sending notifn")
+                // notify to members Array
+                notification(pvtTokens, "Event Invitaion", eventName)
+              })
+            }
             // console.log(updatedEvent)
             console.log("User And Event Updated... Sending Notification...")
            }
            
       }
     })
-    
-    console.log(existing)
-    let newConversation = new Conversation({
-      name: eventName,
-      members: existing,
-      type: "Group" // Event Group Conversation
-    })
-    newConversation.save().then(()=> {
-      console.log("Conversation Created.. sending notifn")
-      // notify to members Array
-      notification(pvtTokens, "Event Invitaion", eventName)
-    })
-
     } catch (err) {
       console.log(err)
       return res.status(500).json({ result: err, msg: "Error"});

@@ -36,7 +36,6 @@ class Conversation {
 
     async userCon(req, res) {
         try {
-          console.log(req.user._id)
             let conversations = await conversationModel.find({members: {$in: [req.user._id]}})
             if(conversations){
               console.log(conversations)
