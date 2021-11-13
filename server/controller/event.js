@@ -152,11 +152,11 @@ class Event {
                             console.log("User Updated Successfully")
                             if(type === "PRIVATE") {
                               //function 
-                            addUsersToEvent(result.members, result._id, req.user._id, result.name) // add users to this event inside this fucntion selected users will be notify
+                            addUsersToEvent(result.members, result._id, req.user._id, result.name, req.user.expoPushToken) // add users to this event | inside this fucntion selected users will be notify
 
                             } else {
                               // notify to all user
-                              notifyAllUsers("Event Found", restult.name, req.user.expoPushToken)
+                              notifyAllUsers("Event Found", result.name, req.user.expoPushToken)
                             }
 
                             return res.status(200).json({ result: result, msg: "Success"});
@@ -295,10 +295,11 @@ class Event {
 
 }
 
-async function addUsersToEvent(contacts, eventId, userId, eventName) {
+async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
   try {
     let contactArray = Object.keys(contacts[0])
     let existing = [userId];
+    let pvtTokens = [orgToken];
     console.log(existing)
     contactArray.forEach( async (contact) => {
       let user = await User.findOne({mobileNo: contact})
@@ -307,6 +308,7 @@ async function addUsersToEvent(contacts, eventId, userId, eventName) {
         console.log(`sms send to ${contact}`)
       } else if(user){
         existing.push(user._id)
+        pvtTokens.push(user.expoPushToken)
           let updatedUser = await User.findOneAndUpdate({mobileNo: contact}, {$addToSet: {myEvents: eventId}})
            if(updatedUser) {
              console.log(updatedUser._id)
@@ -326,8 +328,8 @@ async function addUsersToEvent(contacts, eventId, userId, eventName) {
     })
     newConversation.save().then(()=> {
       console.log("Conversation Created.. sending notifn")
-            // notify to members Array
-            notifySelectedUser("Event Invitaion", eventName, req.user.expoPushToken, )
+      // notify to members Array
+      notification(pvtTokens, "Event Invitaion", eventName)
     })
 
     } catch (err) {
