@@ -339,7 +339,7 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
   }
 
   async function notifyAllUsers(title, body, orgToken){
-    let users = User.find()
+    let users = User.find({})
     console.log("usersssssssss", users)
     if(users) {
       let tokens = [orgToken]
