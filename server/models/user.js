@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema(
       },
       bid: {
         type: ObjectId, ref: "Bid",
-        unique: true
+        // unique: true
       }
     }],
     contactId: {

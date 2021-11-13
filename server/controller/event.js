@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema.Types;
 const { update } = require("../models/user");
 const schedule = require('node-schedule');
+const { notification } = require("../middleware/notification");
 
 const Conversation = require("../models/conversation");
 
@@ -149,8 +150,14 @@ class Event {
                         await User.updateOne({mobileNo: req.user.mobileNo}, {$addToSet: {myEvents: result._id}})
                         .then( user => {
                             console.log("User Updated Successfully")
+                            if(type === "PRIVATE") {
+                              //function 
+                            addUsersToEvent(result.members, result._id, req.user._id, result.name) // add users to this event inside this fucntion selected users will be notify
 
-                            addUsersToEvent(result.members, result._id, req.user._id, result.name)
+                            } else {
+                              // notify to all user
+                              notifyAllUsers("Event Found", restult.name, req.user.expoPushToken)
+                            }
 
                             return res.status(200).json({ result: result, msg: "Success"});
                         })
@@ -293,7 +300,7 @@ async function addUsersToEvent(contacts, eventId, userId, eventName) {
     let contactArray = Object.keys(contacts[0])
     let existing = [userId];
     console.log(existing)
-    await contactArray.forEach( async (contact) => {
+    contactArray.forEach( async (contact) => {
       let user = await User.findOne({mobileNo: contact})
       if(user === null || !user){
         // Send Sms to Contatct
@@ -304,13 +311,13 @@ async function addUsersToEvent(contacts, eventId, userId, eventName) {
            if(updatedUser) {
              console.log(updatedUser._id)
             let updatedEvent = await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: updatedUser._id}, $inc: {totalSubs: "+1"}})
-
-
             // console.log(updatedEvent)
             console.log("User And Event Updated... Sending Notification...")
            }
+           
       }
     })
+    
     console.log(existing)
     let newConversation = new Conversation({
       name: eventName,
@@ -318,13 +325,30 @@ async function addUsersToEvent(contacts, eventId, userId, eventName) {
       type: "Group" // Event Group Conversation
     })
     newConversation.save().then(()=> {
-      console.log("Conversation Created")
+      console.log("Conversation Created.. sending notifn")
+            // notify to members Array
+            notifySelectedUser("Event Invitaion", eventName, req.user.expoPushToken, )
     })
 
     } catch (err) {
       console.log(err)
       return res.status(500).json({ result: err, msg: "Error"});
     }
+  }
+
+  async function notifyAllUsers(title, body, orgToken){
+    let users = User.find()
+    if(users) {
+      let tokens = [orgToken]
+      await users.forEach((user) => {
+        tokens.push(user.expoPushToken)
+      })
+      notification(tokens, title, body)
+    }
+  }
+
+  async function notifySelectedUser(title, body, orgToken, users){
+
   }
 
 const eventController = new Event();
