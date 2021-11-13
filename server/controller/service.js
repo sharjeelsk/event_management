@@ -62,6 +62,7 @@ class Service {
                     await createCategory.save().then(async(cat) => {
                       console.log("New Category is Being Created...")
                       console.log(cat)
+                      
                       let service = new ServiceModel({
                         categoryId: cat._id,
                         category: newCategory,
