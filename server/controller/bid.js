@@ -2,6 +2,8 @@ const bidModel = require("../models/bid");
 const User = require("../models/user");
 const Event = require("../models/event");
 const jwt = require("jsonwebtoken");
+const { notification } = require("../middleware/notification");
+
 
 class Bid {
 
@@ -87,12 +89,13 @@ class Bid {
                                  };
                             let eventInc = await Event.updateOne(query, {$inc: {totalBids: "+1", totalSubs: "+1"}})
                             console.log("Bid Created Successfully... Updating User and Event...")
-                            await Event.updateOne({_id: eventId}, {$addToSet: {bids: result._id, subs: userId}})
-                            .then( async () => {
+                            await Event.findOneAndUpdate({_id: eventId}, {$addToSet: {bids: result._id, subs: userId}})
+                            .then( async (currentEvent) => {
                                 console.log("Event Updated Successfully")
                                 await User.updateOne({mobileNo: req.user.mobileNo}, {$addToSet: {myBids: result._id, myEvents: eventId, bidedEvent: eventId}})
                                 .then( (updatedUser) => {
                                     console.log("User Updated Successfully")
+                                    notifyOrganiser(currentEvent.organiserId, currentEvent.name, req.user.name)
                                 return res.status(200).json({ result: updatedUser, msg: "Success"});
                                 })   
                             })
@@ -116,12 +119,19 @@ class Bid {
                         updateOps[ops.propName] = ops.value;
                     }
                     console.log(updateOps)
-                    let currentBid = await bidModel.updateOne({_id: bidId}, {
-                        $set: updateOps
-                      });
-                        if(currentBid) {
-                          return res.status(200).json({ result: currentBid, msg: "Success" });
-                        }
+                    await bidModel.findOneAndUpdate({_id: bidId}, {$set: updateOps})
+                      .then((updatedbid)=> {
+                      //notify Organiser
+                        Event.findOne({_id: updatedbid.eventId})
+                        .then((foundedEvent) => {
+                          notifyOrganiser(foundedEvent.organiserId, foundedEvent.name, `${req.user.name} - Vendor`)
+                        })
+                        return res.status(200).json({ result: updatedBid, msg: "Success" });
+                    })
+                          
+
+                          
+                        
                 }
           } catch (err) {
             console.log(err)
@@ -143,6 +153,7 @@ class Bid {
                           console.log(a)
                             await Event.updateOne({_id: deletedBid.eventId}, {$pull: {"bids": bidId}, $inc: {totalBids: -1}})
                             .then(()=> {
+                              // no need of Notifying Organiser
                                 return res.status(200).json({ result: deletedBid, msg: "Success" });
                             })
                         })  
@@ -172,7 +183,10 @@ class Bid {
                             }
                             console.log(newBid)
                             await User.updateOne({_id: req.user._id}, { $addToSet: {myApprovals: newBid} })
-                                return res.status(200).json({ result: approvedBid, msg: "Success" });
+                            .then(()=> {
+                              notifyOrganiser(approvedBid.userId, foundEvent.name, `${req.user.name} - Organiser`)
+                              return res.status(200).json({ result: approvedBid, msg: "Success" });
+                            })     
                           }
                         }
             }
@@ -181,6 +195,13 @@ class Bid {
             return res.status(500).json({ result: err, msg: "Error"});
           }
     }
+}
+
+async function notifyOrganiser(sendUserId, eventName, userName) {
+    await User.findOne({_id: sendUserId})
+      .then((user)=> {
+        notification(user.expoPushToken, `New Bid on ${eventName}`, `by ${userName}`)
+      })
 }
 
 const bidController = new Bid();

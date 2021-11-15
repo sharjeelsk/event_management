@@ -39,6 +39,7 @@ class User {
       let currentUser = await userModel.updateOne({mobileNo: req.user.mobileNo}, {
         $set: updateOps
       });
+      console.log(updateOps)
         if(currentUser) {
           return res.status(200).json({ result: currentUser, msg: "Success" });
         }

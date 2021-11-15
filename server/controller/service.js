@@ -53,7 +53,7 @@ class Service {
             } else {
               console.log(req.body)
                 let newCategory = category.charAt(0).toUpperCase() + category.slice(1);
-                  if(categoryId === null){
+                  if(categoryId === ''){
                     console.log("iin NULL")
                     let createCategory = new Category({
                       name: category,
@@ -137,7 +137,7 @@ class Service {
             } else {
                     let deletedService = await ServiceModel.deleteOne({_id: serviceId})
                       if(deletedService) {
-                        return res.status(200).json({ result: deletedService, msg: "Success" });
+                        return res.status(200).json({ result: deletedService.deletedCount, msg: "Success" });
                       }
             }
           } catch (err) {

@@ -18,14 +18,19 @@ class Conversation {
                 return res.status(200).json({ result: conversation, msg: "Success"});
             } else {
               // console.log("new")
-                                    let newConversation = new conversationModel({
-                        // name: 
-                        members: [senderId, recieverId],
-                        type: "Single" // this is used bcoz this function is used only for creating one-to-one Conversation
-                    });
-
-                    let conversation = await newConversation.save();
-                    return res.status(200).json({ result: conversation, msg: "Success"});
+              await User.findOne({_id: recieverId})
+              .then(async (reciever) => {
+                await User.findOne({_id: senderId})
+                .then(async (sender) => {
+                  let newConversation = new conversationModel({
+                    name: [{userId: reciever._id, name: reciever.name}, {userId: sender._id, name: sender.name}],
+                    members: [senderId, recieverId],
+                    type: "Single" // this is used bcoz this function is used only for creating one-to-one Conversation
+                });
+                let conversation = await newConversation.save();
+                return res.status(200).json({ result: conversation, msg: "Success"});
+                })
+              })
               }
             }
           } catch (err) {

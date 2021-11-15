@@ -187,12 +187,17 @@ class Event {
                         updateOps[ops.propName] = ops.value;
                     }
                     console.log(updateOps)
-                    let currentEvent = await eventModel.updateOne({_id: eventId}, {
+                    let currentEvent = await eventModel.findOneAndUpdate({_id: eventId}, {
                         $set: updateOps
                       });
                         if(currentEvent) {
+                          notifySelectedUser("Event Updated", currentEvent.name, currentEvent.subs)
                           return res.status(200).json({ result: currentEvent, msg: "Success" });
-                        }
+                        } 
+                        
+
+
+                       
                 }
           } catch (err) {
             console.log(err)
@@ -206,10 +211,20 @@ class Event {
             if(!eventId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                    let deletedEvent = await eventModel.deleteOne({_id: eventId})
-                      if(deletedEvent) {
-                        return res.status(200).json({ result: deletedEvent, msg: "Success" });
-                      }
+              await eventModel.findOne({_id: eventId})
+              .then( async (currentEvent) => {
+                await User.updateMany({myEvents: {$in: eventId}}, {$pull: {myEvents: eventId}})
+                .then( async () => {
+                  await Conversation.deleteOne({eventId: eventId})
+                  .then( async () => {
+                    await eventModel.deleteOne({_id: eventId})
+                    .then((currentEvent)=> {
+                      notifySelectedUser("Event Deleted", currentEvent.name, currentEvent.subs)
+                      return res.status(200).json({ result: deletedEvent, msg: "Success" });
+                    })
+                  })
+                })
+              })
             }
           } catch (err) {
             console.log(err)
@@ -227,14 +242,19 @@ class Event {
                          _id: eventId,
                          subs: {$ne: req.user._id}
                           };
-                        let eventInc = await eventModel.updateOne(query, {$inc: {totalSubs: "+1"}})
-                        let updatedEvent = await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: req.user._id}})
-                        if(updatedEvent) {
-                            let updatedUser= await User.updateOne({_id: req.user._id}, {$addToSet: {myEvents: eventId}})
-                            if(updatedUser){
+                        await eventModel.updateOne(query, {$inc: {totalSubs: "+1"}})
+                        .then(async()=> {
+                          await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: req.user._id}})
+                          .then(async()=> {
+                            await User.updateOne({_id: req.user._id}, {$addToSet: {myEvents: eventId}})
+                            .then(async()=> {
+                              await Conversation.updateOne({eventId: eventId}, {$push: {members: req.user._id}})
+                              .then(()=> {
                                 return res.status(200).json({ result: "Joined", msg: "Success" });
-                            }
-                        }
+                              })
+                            })
+                          })
+                        })
             }
           } catch (err) {
             console.log(err)
@@ -253,13 +273,16 @@ class Event {
                       //  subs: {$ne: req.user._id}
                       //   };
                       // let eventInc = await eventModel.updateOne(query, {$inc: {totalSubs: "-1"}})
-                      let updatedEvent = await eventModel.updateOne({_id: eventId}, {$pull: {subs: req.user._id}, $inc: {totalSubs: "-1"}})
-                      if(updatedEvent) {
-                          let updatedUser= await User.updateOne({_id: req.user._id}, {$pull: {myEvents: eventId}})
-                          if(updatedUser){
-                              return res.status(200).json({ result: "UnSubscribed", msg: "Success" });
-                          }
-                      }
+                      await User.updateOne({_id: req.user._id}, {$pull: {myEvents: eventId}})
+                      .then(async() => {
+                        await Conversation.updateOne({eventId: eventId}, {$pull: {members: req.user._id}})
+                        .then(async()=> {
+                          await eventModel.updateOne({_id: eventId}, {$pull: {subs: req.user._id}, $inc: {totalSubs: "-1"}})
+                          .then(() => {
+                            return res.status(200).json({ result: "UnSubscribed", msg: "Success" });
+                          })
+                        })
+                      })
           }
         } catch (err) {
           console.log(err)
@@ -295,6 +318,11 @@ class Event {
 
 }
 
+
+//Add users to Event,
+// send Sms who are not User,
+// subscribe who are users and send notification,
+// Create Group Conversation for Event
 async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
   try {
     let contactArray = Object.keys(contacts[0])
@@ -318,7 +346,8 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
               let newConversation = new Conversation({
                 name: eventName,
                 members: existing,
-                type: "Group" // Event Group Conversation
+                type: "Group", // Event Group Conversation
+                eventId: eventId
               })
               newConversation.save().then(()=> {
                 console.log("Conversation Created.. sending notifn")
@@ -338,11 +367,12 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
     }
   }
 
+  // notify ALl Users
   async function notifyAllUsers(title, body, orgToken){
-    let users = User.find({})
+    let users = await User.find({})
     console.log("usersssssssss", users)
     if(users) {
-      let tokens = [orgToken]
+      let tokens = []
       await users.forEach((user) => {
         tokens.push(user.expoPushToken)
       })
@@ -350,9 +380,33 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
     }
   }
 
-  async function notifySelectedUser(title, body, orgToken, users){
-
+  // notify Seleccted User
+  async function notifySelectedUser(title, body, users){ 
+    let tokens = [] 
+    let loop = await users.forEach((user)=> {
+      let currentUser = User.findOne({_id: user._id})
+      tokens.push(currentUser.expoPushToken)
+    })
+    if(loop){
+      notification(tokens, title, body)
+    }
   }
+
+  // // Un subscribe EVent And remove user from converation
+  // async function unSubEvent(eventId, users) {
+  //   let userCount = users.length
+  //   console.log(userCount)
+  //     await User.updateMany({myEvents: {$in: eventId}}, {$pull: {myEvents: eventId}})
+  //     .then(async() => {
+  //       await eventModel.updateOne({_id: eventId}, { $pull: { subs: { $in: users } }, $inc: {totalSubs: `-${userCount}`} }, {multi: true})
+  //       .then(async ()=> {
+  //         await Conversation.updateOne({eventId: eventId}, {$pull: {members: {$in: users}}}, {multi: true})
+  //         console.log(`Usub Event with Given users: ${userCount} | Pull USers from Conversation`)
+  //         // IMP //
+  //         // Chat page should refresh whenever user visit it
+  //       })
+  //     })
+  // }
 
 const eventController = new Event();
 module.exports = eventController;

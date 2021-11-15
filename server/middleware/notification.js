@@ -2,8 +2,9 @@ const fetch = require("node-fetch");
 
 module.exports.notification  = function(expoPushTokens, title, body) {
     // const expoPushToken ='ExponentPushToken[wxq10DBQLsbmBjr7cuPb5P]'
+    console.log(expoPushTokens, title, body)
     const message = {
-        to: expoPushTokens,
+        to: "ExponentPushToken[k5U0xyEqSJHIBuICc1dV27]",
         sound: 'default',
         title: title,
         body: body,

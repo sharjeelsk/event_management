@@ -12,6 +12,9 @@ const ConversationSchema = new mongoose.Schema(
       type: String,
       enum: ["Single", "Group"],
       require: true
+    },
+    eventId: {
+      type: ObjectId, ref: "Event"
     }
   },
   { timestamps: true }
