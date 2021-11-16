@@ -60,9 +60,13 @@ class Auth {
       let user = await userModel.findOne({mobileNo: phone})
       console.log(user)
       if(user){
-        // console.log(user)
-        console.log("User Already Exist, Logging in...")
+        if (user.address === null){
+          console.log("User Already Exist, But Details Not Available, Signing in...")
+          res.status(200).send({result: refreshToken,  msg: "signup" });
+        } else {
+          console.log("User Already Exist, Logging in...")
         res.status(200).send({result: refreshToken,  msg: 'login' });
+        }
       } else {
         try{
           console.log("New User being Created...")
