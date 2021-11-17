@@ -4,7 +4,7 @@ module.exports.notification  = function(expoPushTokens, title, body) {
     // const expoPushToken ='ExponentPushToken[wxq10DBQLsbmBjr7cuPb5P]'
     console.log(expoPushTokens, title, body)
     const message = {
-        to: "ExponentPushToken[k5U0xyEqSJHIBuICc1dV27]",
+        to: expoPushTokens,
         sound: 'default',
         title: title,
         body: body,
