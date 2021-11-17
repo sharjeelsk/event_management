@@ -130,7 +130,7 @@ app.get("/", (req,res) => {
 })
 
 app.get("/notification",async (req,res)=>{
-  const expoPushToken ='ExponentPushToken[k5U0xyEqSJHIBuICc1dV27]'
+  const expoPushToken ='ExponentPushToken[r7kJbmFjt4-3Sb1aoaIxiq]'
   const message = {
       to: expoPushToken,
       sound: 'default',
@@ -138,7 +138,6 @@ app.get("/notification",async (req,res)=>{
       body: 'And here is the body!',
       data: { someData: 'goes here' },
     };
-    setTimeout(async () => {
       await fetch('https://exp.host/--/api/v2/push/send', {
           method: 'POST',
           headers: {
@@ -148,7 +147,6 @@ app.get("/notification",async (req,res)=>{
           },
           body: JSON.stringify(message),
         });
-    }, 3000);
     res.send("send")
   
    
