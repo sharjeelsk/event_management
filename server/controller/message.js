@@ -31,6 +31,7 @@ class Message {
         try {
             let { conversationId } = req.body;
             if( !conversationId ){
+                console.log("dsads")
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                     let messages = await messageModel.find({

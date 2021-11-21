@@ -12,7 +12,7 @@ const socketio = require("socket.io")
 const server = http.createServer(app)
 const io = socketio(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000","http://localhost:3001", "http://localhost:3006"],
     methods: ["GET", "POST"],
   },
 });
@@ -38,7 +38,7 @@ app.use(bodyParser.json())
 let messageModel = require("./server/models/message")
 
 //Socket
-io.on("connection", socket => {
+io.sockets.on("connection", socket => {
   console.log(`User Connected: ${socket.id}`);
 
   socket.on("join_room",async (data) => {
@@ -47,35 +47,31 @@ io.on("connection", socket => {
     let messages = await messageModel.find({
       conversationId: data.toString()
   })
-  console.log(messages)
-    io.to(data).emit("receive_message", messages);
+    io.to(data).emit("all-msg", messages);
+  });
+
+  socket.on("leave_room",async (data) => {
+    console.log(data)
+    socket.leave(data);
+    console.log(`User with ID: ${socket.id} leave room: ${data}`);
   });
 
   socket.on("send_message",(data) => {
     console.log(data)
     let newMessage = new messageModel({
-      conversationId: data.conversationId,
+      conversationId: data.room,
       sender: data.sender,
       text : data.text
   });
     newMessage.save()
     .then((saved) => {
-      console.log(saved)
-      console.log("COnv ID", data.conversationId)
+      console.log("COnv ID", data.room)
       let roomId = data.conversationId;
-      io.to(roomId).emit("receive_message", saved);
+      console.log(data.room)
+      io.to(data.room).emit("receive_message", saved);
     })
 
   });
-
-  // socket.on("all-messages",async (data) => {
-  //   console.log(data)
-  //   let messages = await messageModel.find({
-  //     conversationId: data.toString()
-  // })
-  // console.log(messages)
-  //   socket.to(data).emit("receive_message", messages);
-  // });
 
   socket.on("disconnect", () => {
     console.log("User Disconnected", socket.id);
@@ -130,7 +126,16 @@ app.get("/", (req,res) => {
 })
 
 app.get("/notification",async (req,res)=>{
-  const expoPushToken =["ExponentPushToken[r7kJbmFjt4-3Sb1aoaIxiq]","ExponentPushToken[2s67cYKY2z6fi4LQkvc3KH]"]
+  const expoPushToken =['ExponentPushToken[2s67cYKY2z6fi4LQkvc3KH]',
+     'ExponentPushToken[k5U0xyEqSJHIBuICc1dV27]',
+     'ExponentPushToken[k5U0xyEqSJHIBuICc1dV27]',
+     'ExponentPushToken[r7kJbmFjt4-3Sb1aoaIxiq]',
+     'ExponentPushToken[MJRl5FA0BEjSwZv83kyyJk]',
+     'ExponentPushToken[MJRl5FA0BEjSwZv83kyyJk]',
+     'ExponentPushToken[MJRl5FA0BEjSwZv83kyyJk]',
+     'ExponentPushToken[r7kJbmFjt4-3Sb1aoaIxiq]',
+     'ExponentPushToken[2s67cYKY2z6fi4LQkvc3KH]'
+  ]
   const message = {
       to: expoPushToken,
       sound: 'default',

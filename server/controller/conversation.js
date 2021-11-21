@@ -43,7 +43,6 @@ class Conversation {
         try {
             let conversations = await conversationModel.find({members: {$in: [req.user._id]}})
             if(conversations){
-              console.log(conversations)
                 return res.status(200).json({ result: conversations, msg: "Success"});
             }
           } catch (err) {

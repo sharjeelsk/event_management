@@ -5,6 +5,6 @@ const { isAuthorized } = require("../middleware/reqAuth");
 
 
 router.post("/add-msg", isAuthorized, MessageController.addMsg);
-router.get("/get-msg", isAuthorized, MessageController.getMsg);
+router.get("/get-msg", MessageController.getMsg);
 
 module.exports = router;
