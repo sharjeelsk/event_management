@@ -9,7 +9,7 @@ const eventSchema = new mongoose.Schema(
             },
             organiserName: {
                 type: String,
-                default: "Organiser Name",
+                default: null,
                 required: true
                 
             }, // Update in BackGround

@@ -91,9 +91,6 @@ class Event {
             if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-              // console.log(start)
-              // console.log(end)
-              console.log(req.body.contacts)
               let contactList;
                 if(type === "PRIVATE"){
                   let { contacts }= req.body;
@@ -105,7 +102,6 @@ class Event {
                   ///take ContactId and groups Array and set it on events Members field
                   // run a function on userCOntactId groups for sending notification to existing customer
                   // and sms to non existing user
-
 
                     let event = new eventModel({
                         organiserId: req.user._id,
@@ -142,17 +138,15 @@ class Event {
                       })
                         console.log("Event Created Successfully... Updating User Events...")
                         await User.updateOne({mobileNo: req.user.mobileNo}, {$addToSet: {myEvents: result._id}})
-                        .then( user => {
+                        .then( (user) => {
                             console.log("User Updated Successfully")
                             if(type === "PRIVATE") {
                               //function 
                             addUsersToEvent(result.members, result._id, req.user._id, result.name, req.user.expoPushToken) // add users to this event | inside this fucntion selected users will be notify
-
                             } else {
                               // notify to all user
-                              notifyAllUsers("Event Found", result.name, req.user.expoPushToken)
+                              notifyAllUsers("Event Found", result.name, result._id)
                             }
-
                             return res.status(200).json({ result: result, msg: "Success"});
                         })
                         .catch(err=>{
@@ -185,7 +179,7 @@ class Event {
                         $set: updateOps
                       });
                         if(currentEvent) {
-                          notifySelectedUser("Event Updated", currentEvent.name, currentEvent.subs)
+                          notifySelectedUser("Event Updated", currentEvent.name, currentEvent.subs, currentEvent._id)
                           return res.status(200).json({ result: currentEvent, msg: "Success" });
                         }       
                 }
@@ -211,8 +205,8 @@ class Event {
                   .then( async () => {
                     await eventModel.deleteOne({_id: eventId})
                     .then((deletedEvent)=> {
-                      notifySelectedUser("Event Deleted", currentEvent.name, currentEvent.subs)
-                      return res.status(200).json({ result: deletedEvent, msg: "Success" });
+                      notifySelectedUser("Event Deleted", currentEvent.name, currentEvent.subs, currentEvent._id)
+                      return res.status(200).json({ result: deletedEvent.deletedCount, msg: "Success" });
                     })
                   })
                 })
@@ -297,7 +291,6 @@ class Event {
                             }
                           }
                         })
-                        // .select("bidedEvent");
             if(user) {
                   return res.status(200).json({ result: user, msg: "Success" });
             }
@@ -316,41 +309,42 @@ class Event {
 // subscribe who are users and send notification,
 // Create Group Conversation for Event
 async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
+  console.log("__________Inside Fumnction____________________")
   try {
     let contactArray = Object.keys(contacts[0])
     let existing = [userId];
     let pvtTokens = [orgToken];
-    console.log(existing)
-    contactArray.forEach( async (contact) => {
+    let count = 0
+    await contactArray.forEach( async (contact, index) => {
       let user = await User.findOne({mobileNo: contact})
       if(user === null || !user){
         // Send Sms to Contatct
+        count++;
         console.log(`sms send to ${contact}`)
       } else if(user){
         existing.push(user._id)
         pvtTokens.push(user.expoPushToken)
+        count++;
+        console.log(count, contactArray.length)
+        // if(count === contactArray.length){
           let updatedUser = await User.findOneAndUpdate({mobileNo: contact}, {$addToSet: {myEvents: eventId}})
-           if(updatedUser) {
-             console.log(updatedUser._id)
-            let updatedEvent = await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: updatedUser._id}, $inc: {totalSubs: "+1"}})
-            if(updatedEvent) {
-              console.log(existing)
-              let newConversation = new Conversation({
-                name: eventName,
-                members: existing,
-                type: "Group", // Event Group Conversation
-                eventId: eventId
-              })
-              newConversation.save().then(()=> {
-                console.log("Conversation Created.. sending notifn")
-                // notify to members Array
-                notification(pvtTokens, eventName, "Event Invitaion")// title and body can be swap
-              })
-            }
-            // console.log(updatedEvent)
-            console.log("User And Event Updated... Sending Notification...")
+          if(updatedUser) {
+           let updatedEvent = await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: updatedUser._id}, $inc: {totalSubs: "+1"}})
+           if(updatedEvent && index === contactArray.length - 1) {
+             let newConversation = new Conversation({
+               name: eventName,
+               members: existing,
+               type: "Group", // Event Group Conversation
+               eventId: eventId
+             })
+             newConversation.save().then(()=> {
+               console.log("Conversation Created.. sending notifn")
+               // notify to members Array
+               notification(pvtTokens, eventName, "Event Invitaion", eventId, "Event", existing)// title and body can be swap
+             })
            }
-           
+          }
+        // }  
       }
     })
     } catch (err) {
@@ -360,30 +354,37 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
   }
 
   // notify ALl Users
-  async function notifyAllUsers(title, body, orgToken){
+  async function notifyAllUsers(title, body, itemId){
     let users = await User.find({})
     console.log("usersssssssss", users)
     if(users) {
       let tokens = []
+      let userIds = []
       await users.forEach((user) => {
+        userIds.push(user._id)
         if (user.expoPushToken !== null){
           tokens.push(user.expoPushToken)
         }
       })
-      notification(tokens, body, title)// title and body can be swap
+      notification(tokens, body, title, itemId, "Event", userIds)// title and body can be swap
     }
   }
 
   // notify Seleccted User
-  async function notifySelectedUser(title, body, users){ 
+  async function notifySelectedUser(title, body, users, itemId){ 
+    console.log("indsi")
     let tokens = [] 
-    let loop = await users.forEach((user)=> {
-      let currentUser = User.findOne({_id: user._id})
-      tokens.push(currentUser.expoPushToken)
+    let userIds = []
+    let loop = await users.forEach( async (user)=> {
+      console.log(user)
+      let currentUser = await User.findOne({_id: user._id})
+        userIds.push(currentUser._id)
+        if(currentUser.expoPushToken !== null){
+        tokens.push(currentUser.expoPushToken)
+      }
     })
-    if(loop){
-      notification(tokens, body, title)// title and body can be swap
-    }
+    notification(tokens, body, title, itemId, "Event", userIds)// title and body can be swap
+
   }
 
   // // Un subscribe EVent And remove user from converation

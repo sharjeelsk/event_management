@@ -95,7 +95,7 @@ class Bid {
                                 await User.updateOne({mobileNo: req.user.mobileNo}, {$addToSet: {myBids: result._id, myEvents: eventId, bidedEvent: eventId}})
                                 .then( (updatedUser) => {
                                     console.log("User Updated Successfully")
-                                    notifyOrganiser(currentEvent.organiserId, currentEvent.name, req.user.name)
+                                    notify(currentEvent.organiserId,`New Bid on ${currentEvent.name}`,`by ${req.user.name} - Vendor`, result._id, )// notification to Organiser // reminder
                                 return res.status(200).json({ result: updatedUser, msg: "Success"});
                                 })   
                             })
@@ -124,14 +124,10 @@ class Bid {
                       //notify Organiser
                         Event.findOne({_id: updatedbid.eventId})
                         .then((foundedEvent) => {
-                          notifyOrganiser(foundedEvent.organiserId, foundedEvent.name, `${req.user.name} - Vendor`)
+                          // notify(foundedEvent.organiserId, `Bid ${foundedEvent.name} Updated`, `${req.user.name} - Vendor`)
                         })
                         return res.status(200).json({ result: updatedBid, msg: "Success" });
-                    })
-                          
-
-                          
-                        
+                    })       
                 }
           } catch (err) {
             console.log(err)
@@ -184,7 +180,7 @@ class Bid {
                             console.log(newBid)
                             await User.updateOne({_id: req.user._id}, { $addToSet: {myApprovals: newBid} })
                             .then(()=> {
-                              notifyOrganiser(approvedBid.userId, foundEvent.name, `${req.user.name} - Organiser`)
+                              notify(approvedBid.userId, `Bid Approved For Event-${foundEvent.name}`, `by ${req.user.name} - Organiser`, approvedBid._id)
                               return res.status(200).json({ result: approvedBid, msg: "Success" });
                             })     
                           }
@@ -197,10 +193,10 @@ class Bid {
     }
 }
 
-async function notifyOrganiser(sendUserId, eventName, userName) {
+async function notify(sendUserId, eventName, userName, itemIds) {
     await User.findOne({_id: sendUserId})
       .then((user)=> {
-        notification(user.expoPushToken, `New Bid on ${eventName}`, `by ${userName}`)
+        notification(user.expoPushToken, eventName, userName, itemId, "Bid", [user._id])
       })
 }
 

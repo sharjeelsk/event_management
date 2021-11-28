@@ -29,13 +29,11 @@ const { Message } = require("twilio/lib/twiml/MessagingResponse");
 app.use(morgan("dev"));
 app.use(bodyParser.json())
 
-
 //app.use(express.static("public"));
 //app.use(express.urlencoded({ extended: false }));
 //app.use(express.json());
 
-
-// Models
+//Models
 let User = require("./server/models/user")
 let messageModel = require("./server/models/message")
 let Conv = require("./server/models/conversation")
@@ -71,7 +69,7 @@ io.sockets.on("connection", socket => {
     .then((saved) => {
       console.log("COnv ID", data.room)
       // Norify next User
-      notifyUser(senderName, nextUserId, saved.text)
+      notifyUser(senderName, nextUserId, saved.text)// Not Reminder
       io.to(data.room).emit("receive_message", saved)
     })
 
@@ -155,6 +153,7 @@ app.use("/api/conv", require("./server/routes/conversation"))
 app.use("/api/msg", require("./server/routes/message"))
 app.use("/api/report", require("./server/routes/report"))
 app.use("/api/userContact", require("./server/routes/userContact"))
+app.use("/api/reminder", require("./server/routes/reminder"))
 
 
 
