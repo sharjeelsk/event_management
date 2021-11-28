@@ -7,6 +7,7 @@ const mongoose = require("mongoose")
 const morgan = require("morgan")
 const http = require("http")
 const app = express()
+const { notification } = require("./server/middleware/notification")
 app.use(cors());
 const socketio = require("socket.io")
 const server = http.createServer(app)
@@ -35,7 +36,9 @@ app.use(bodyParser.json())
 
 
 // Models
+let User = require("./server/models/user")
 let messageModel = require("./server/models/message")
+let Conv = require("./server/models/conversation")
 
 //Socket
 io.sockets.on("connection", socket => {
@@ -47,6 +50,7 @@ io.sockets.on("connection", socket => {
     let messages = await messageModel.find({
       conversationId: data.toString()
   })
+  console.log(messages)
     io.to(data).emit("all-msg", messages);
   });
 
@@ -56,8 +60,8 @@ io.sockets.on("connection", socket => {
     console.log(`User with ID: ${socket.id} leave room: ${data}`);
   });
 
-  socket.on("send_message",(data) => {
-    console.log(data)
+  socket.on("send_message",(data, senderName, nextUserId) => {
+    console.log(data, senderName, nextUserId)
     let newMessage = new messageModel({
       conversationId: data.room,
       sender: data.sender,
@@ -66,9 +70,9 @@ io.sockets.on("connection", socket => {
     newMessage.save()
     .then((saved) => {
       console.log("COnv ID", data.room)
-      let roomId = data.conversationId;
-      console.log(data.room)
-      io.to(data.room).emit("receive_message", saved);
+      // Norify next User
+      notifyUser(senderName, nextUserId, saved.text)
+      io.to(data.room).emit("receive_message", saved)
     })
 
   });
@@ -77,6 +81,39 @@ io.sockets.on("connection", socket => {
     console.log("User Disconnected", socket.id);
   });
 })
+
+// Send Notification for One to One Conversation
+async function notifyUser(senderName, nextUserId, message) {
+  console.log(senderName, nextUserId, message)
+  console.log(mongoose.Types.ObjectId(nextUserId))
+  await User.findOne({_id: nextUserId})
+  .then((user) => {
+    console.log(user);
+    notification(user.expoPushToken, `New Message from ${senderName}`, message)
+  })
+  
+  // let senderName = "";
+  // let nextExpoToken = "";
+  // await Conv.findOne({_id: conversationId})
+  // .then((conv) => {
+  //   console.log(conv.members)
+  //   console.log("S",sender)
+  //   conv.members.forEach(async (member) => {
+  //     if(member !== sender) {
+  //       console.log("A", member)
+  //       await User.findOne({_id: member})
+  //       .then( async (foundUser)=> {
+  //         console.log(foundUser.expoPushToken)
+  //         await User.findOne({_id: sender})
+  //         .then((currentUser)=> {
+  //           notification(nextExpoToken, `New Message from ${currentUser.name}`, message )
+  //         })
+  //       })
+  //     }
+  //   });
+  // })
+
+}
 
 // Database Connection
 mongoose

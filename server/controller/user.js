@@ -158,6 +158,54 @@ class User {
     }
   }
 
+  async search(req, res){
+    try {
+      let users = await userModel.aggregate(
+        [
+          {
+            '$search': {
+              'index': 'default', 
+              'text': {
+                'query': req.body.query, 
+                'path': [
+                  'city'
+                ], 
+                'fuzzy': {}, 
+                'score': {
+                  'boost': {
+                    'value': 5
+                  }
+                }
+              }
+            }
+          },
+          {
+            '$match': {
+                'myServices': {
+                    '$exists': true, 
+                    '$ne': []
+                }
+            }
+        },
+          {
+            "$lookup": {
+            from: "services",
+            localField: "myServices",
+            foreignField: "_id",
+            as: "user_services"
+        }}
+        ]
+      )
+      if(users){
+        console.log(users)
+        return res.status(200).json({ result: users, msg: "Success"});
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
 
 }
 

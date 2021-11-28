@@ -61,19 +61,12 @@ class Event {
     async getSingleEvent(req, res) {
         try {
                 let {eventId} = req.body
-                let event = await eventModel.findOne({_id: eventId})
-                .populate([{
-                    path: "bids",
-                    model: "Bid",
-                    populate: {
-                      path: "userId",
-                      model: "User"
-                    }
-                  },
-                ])
-            if (event) {
-              return res.status(200).json({ result: event, msg: "Success"});
-                }
+                console.log(eventId)
+                await eventModel.findOne({_id: eventId})
+                .then((event) => {
+                  console.log(event)
+                  return res.status(200).json({ result: event, msg: "Success"});
+                })
           } catch (err) {
               console.log(err)
             return res.status(500).json({ result: err, msg: "Error"});
@@ -116,6 +109,7 @@ class Event {
 
                     let event = new eventModel({
                         organiserId: req.user._id,
+                        organiserName: req.user.name,
                         mobileNo, 
                         email, 
                         address, 
@@ -193,11 +187,7 @@ class Event {
                         if(currentEvent) {
                           notifySelectedUser("Event Updated", currentEvent.name, currentEvent.subs)
                           return res.status(200).json({ result: currentEvent, msg: "Success" });
-                        } 
-                        
-
-
-                       
+                        }       
                 }
           } catch (err) {
             console.log(err)
@@ -208,17 +198,19 @@ class Event {
     async deleteEvent(req, res) {
         try {
             let { eventId } = req.body;
+            console.log("IDDDDDDDDDDDDDDDD", eventId)
             if(!eventId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
               await eventModel.findOne({_id: eventId})
               .then( async (currentEvent) => {
+                console.log(currentEvent)
                 await User.updateMany({myEvents: {$in: eventId}}, {$pull: {myEvents: eventId}})
                 .then( async () => {
                   await Conversation.deleteOne({eventId: eventId})
                   .then( async () => {
                     await eventModel.deleteOne({_id: eventId})
-                    .then((currentEvent)=> {
+                    .then((deletedEvent)=> {
                       notifySelectedUser("Event Deleted", currentEvent.name, currentEvent.subs)
                       return res.status(200).json({ result: deletedEvent, msg: "Success" });
                     })
@@ -352,7 +344,7 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
               newConversation.save().then(()=> {
                 console.log("Conversation Created.. sending notifn")
                 // notify to members Array
-                notification(pvtTokens, "Event Invitaion", eventName)
+                notification(pvtTokens, eventName, "Event Invitaion")// title and body can be swap
               })
             }
             // console.log(updatedEvent)
@@ -374,9 +366,11 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
     if(users) {
       let tokens = []
       await users.forEach((user) => {
-        tokens.push(user.expoPushToken)
+        if (user.expoPushToken !== null){
+          tokens.push(user.expoPushToken)
+        }
       })
-      notification(tokens, title, body)
+      notification(tokens, body, title)// title and body can be swap
     }
   }
 
@@ -388,7 +382,7 @@ async function addUsersToEvent(contacts, eventId, userId, eventName, orgToken) {
       tokens.push(currentUser.expoPushToken)
     })
     if(loop){
-      notification(tokens, title, body)
+      notification(tokens, body, title)// title and body can be swap
     }
   }
 

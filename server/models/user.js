@@ -18,6 +18,14 @@ const userSchema = new mongoose.Schema(
       unique: true ,
       require: true,
     },
+    country: {
+      type: String,
+      require: true,
+    },
+    city: {
+      type: String,
+      require: true,
+    },
     address: {
       type: String,
       default: null

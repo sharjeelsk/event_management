@@ -42,6 +42,7 @@ router.get("/uploads/:filename", isAuthorized, usersController.getSingleUpload)
 router.get("/image/:filename", usersController.getSingleImg)
 
 router.get("/myApprovals", isAuthorized, usersController.getMyApprovals);
+router.post("/search", usersController.search);
 
 
 module.exports = router;

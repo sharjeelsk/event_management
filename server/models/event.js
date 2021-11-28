@@ -7,6 +7,12 @@ const eventSchema = new mongoose.Schema(
                 type: ObjectId, ref: "User",
                 required: true
             },
+            organiserName: {
+                type: String,
+                default: "Organiser Name",
+                required: true
+                
+            }, // Update in BackGround
             mobileNo: {
                 type: Number,
                 required: true,
