@@ -10,7 +10,6 @@ class Conversation {
     async newCon(req, res) {
         try {
             let { senderId, recieverId } = req.body;
-            co
             if( !senderId || !recieverId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
