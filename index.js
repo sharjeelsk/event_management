@@ -1,4 +1,4 @@
-// Hagia sophia constantinople tukey
+// Hagia sophia constantinople tukey anatoliya
 require("dotenv").config()
 const express = require("express")
 const fetch = require("node-fetch");
