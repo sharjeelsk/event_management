@@ -45,10 +45,14 @@ io.sockets.on("connection", socket => {
   socket.on("join_room",async (data) => {
     socket.join(data);
     console.log(`User with ID: ${socket.id} joined room: ${data}`);
-    let messages = await messageModel.find({
-      conversationId: data.toString()
-  })
-  console.log(messages)
+    let messages = await messageModel.aggregate([
+      {$match : { conversationId: new mongoose.Types.ObjectId(data)}}
+  ])
+  let messages1 = await messageModel.aggregate([
+    {$match : { conversationId: new mongoose.Types.ObjectId(data)}}
+])
+  // conversationId: data.toString()
+  consol.log(messages)
     io.to(data).emit("all-msg", messages);
   });
 
@@ -72,7 +76,15 @@ io.sockets.on("connection", socket => {
       notifyUser(senderName, nextUserId, saved.text)// Not Reminder
       io.to(data.room).emit("receive_message", saved)
     })
+  });
 
+  socket.on("seen_msg",async (unseen, convId) => {
+    console.log("******************************************************************")
+    console.log(convId)
+    let a = await messageModel.aggregate([
+      {$match : { convsersationId: convId}}
+  ])
+  console.log("seen_msg________________________________", a)
   });
 
   socket.on("disconnect", () => {

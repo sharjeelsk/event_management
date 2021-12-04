@@ -1,12 +1,12 @@
 const conversationModel = require("../models/conversation");
+const Message = require("../models/message");
 const User = require("../models/user");
-var ObjectID = require('mongodb').ObjectID;
+const mongoose = require("mongoose")
 
 const jwt = require("jsonwebtoken");
-
+   
 class Conversation {
-
-
+   
     async newCon(req, res) {
         try {
             let { senderId, recieverId } = req.body;
@@ -41,15 +41,70 @@ class Conversation {
           }
     }
 
+
+
     async userCon(req, res) {
         try {
-            let conversations = await conversationModel.find({members: {$in: [req.user._id]}})
+            let conversations = await conversationModel.aggregate([
+             { $match: {
+              members: {$in: [req.user._id]}
+              }
+            },
+            {$lookup: 
+            {
+                from: 'messages',
+                localField: '_id',
+                foreignField: 'conversationId',
+                as: 'messages'
+            }},
+            {
+              $addFields: {
+                "unseen": {
+                  $sum: { // map out array of like id's //'$$message.seenBy'
+                    $map: {
+                      input: "$messages",
+                      as: "message",
+                      in:  {
+                        $cond: {
+                          if: {
+                            $in: [ req.user._id, "$$message.seenBy" ]
+                          //  $ne: [req.user._id, '$$message.seenBy']
+                          },
+                          then: 0,
+                          else: 1
+                        }
+                     }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              $addFields: {
+                  lastMsg: {"$arrayElemAt": ["$messages", -1]}
+              }  
+            },
+            // {
+            //   $addFields: {
+            //       seen: {
+            //         $in: [req.user._id, '$userIds'] // it works now
+            //       }
+            //   }  
+            // },
+            {
+              $project: 
+              {
+               "messages": 0,
+
+              }
+            }
+
+            ])
             if(conversations){
-              console.log(conversations)
                 return res.status(200).json({ result: conversations, msg: "Success"});
             }
           } catch (err) {
-            console.log(err)()
+            console.log(err)
             return res.status(500).json({ result: err, msg: "Error"});
           }
     }

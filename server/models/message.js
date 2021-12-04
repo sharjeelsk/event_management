@@ -10,8 +10,16 @@ const MessageSchema = new mongoose.Schema(
         type: ObjectId, ref: "User",
     },
     text: {
-        type: String
-    }
+        type: String,
+        require: true
+    },
+    // seen: {
+    //   type: String
+    // },
+    seenBy: [{
+      type: ObjectId, ref: "User",
+      default: Array
+  }]
   },
   { timestamps: true }
 );

@@ -18,7 +18,7 @@ const reminderSchema = new mongoose.Schema(
     },
     schema: {
         type: String,
-        enum: ['Event', "Bid", "Over"],
+        enum: ['Event', "Bid", "User"],
         require: true
     },
     users: [{type: ObjectId, ref: "User"}]
