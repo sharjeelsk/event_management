@@ -1,4 +1,3 @@
-// Hagia sophia constantinople tukey anatoliya
 require("dotenv").config()
 const express = require("express")
 const fetch = require("node-fetch");
@@ -10,6 +9,7 @@ const http = require("http")
 const app = express()
 const { notification } = require("./server/middleware/notification")
 app.use(cors());
+const { isAuthorized } = require("./server/middleware/reqAuth");
 const socketio = require("socket.io")
 const server = http.createServer(app)
 const io = socketio(server, {
@@ -25,7 +25,6 @@ const PORT = process.env.PORT || 3002;
 const path = require('path')
 const Grid = require("gridfs-stream");
 const { Message } = require("twilio/lib/twiml/MessagingResponse");
-
 // Middleware
 app.use(morgan("dev"));
 app.use(bodyParser.json())
@@ -37,30 +36,54 @@ app.use(bodyParser.json())
 //Models
 let User = require("./server/models/user")
 let messageModel = require("./server/models/message")
-let Conv = require("./server/models/conversation")
+let Conv = require("./server/models/conversation");
+const { userInfo } = require("os");
 
-//Socket
+//Socket //middleware remaining
 io.sockets.on("connection", socket => {
   console.log(`User Connected: ${socket.id}`);
 
-  socket.on("join_room",async (data) => {
+  socket.on("join_room",async (data, userId, unseenMsg) => {
     socket.join(data);
     console.log(`User with ID: ${socket.id} joined room: ${data}`);
-    let messages = await messageModel.aggregate([
-      {$match : { conversationId: new mongoose.Types.ObjectId(data)}}
-  ])
-  let messages1 = await messageModel.aggregate([
-    {$match : { conversationId: new mongoose.Types.ObjectId(data)}}
-])
-  // conversationId: data.toString()
-  consol.log(messages)
-    io.to(data).emit("all-msg", messages);
+    await messageModel.aggregate([{$match : { conversationId: new mongoose.Types.ObjectId(data)}}])
+      .then(async (messages) => {
+        await messageModel.updateMany({_id: {$in: unseenMsg}}, {$addToSet: {seenBy: userId}})
+        .then(()=> {
+          io.to(data).emit("all-msg", messages);
+        })
+      })
   });
 
   socket.on("leave_room",async (data) => {
     console.log(data)
     socket.leave(data);
     console.log(`User with ID: ${socket.id} leave room: ${data}`);
+  });
+
+  socket.on("all_conv", async (userId) => {
+    let conversations = await Conv.aggregate([
+      { $match: { members: {$in: [new mongoose.Types.ObjectId(userId)]}}},
+      { $lookup: {
+         from: 'messages',
+         localField: '_id',
+         foreignField: 'conversationId',
+         as: 'messages'
+     }},
+     { $addFields: {unseen: { $sum: { // map out array of seenBy id's //'$$message.seenBy'
+             $map: {
+               input: "$messages",
+               as: "message",
+               in:  { $cond: {if: {$in: [ new mongoose.Types.ObjectId(userId), "$$message.seenBy" ] }, then: 0, else: -1}}}}}}
+     }, 
+     { $addFields: { lastMsg: {"$arrayElemAt": ["$messages", -1]}}},
+     { $addFields: { unseenMsg: {"$slice": ["$messages", "$unseen"]}}},
+     { $project: { "messages": 0, "unseenMsg": {"conversationId": 0, "createdAt": 0, "seenBy": 0, "sender": 0, "text": 0, "updatedAt": 0, "__v": 0}}}
+    ])
+    if(conversations){
+      console.log(conversations)
+      io.to(socket.id).emit("all_conv", conversations)
+    }
   });
 
   socket.on("send_message",(data, senderName, nextUserId) => {
@@ -76,6 +99,7 @@ io.sockets.on("connection", socket => {
       // Norify next User
       notifyUser(senderName, nextUserId, saved.text)// Not Reminder
       io.to(data.room).emit("receive_message", saved)
+      io.to(socket.id).emit("count", data.room)
     })
   });
 

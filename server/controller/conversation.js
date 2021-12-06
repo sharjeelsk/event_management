@@ -59,8 +59,8 @@ class Conversation {
             }},
             {
               $addFields: {
-                "unseen": {
-                  $sum: { // map out array of like id's //'$$message.seenBy'
+                unseen: {
+                  $sum: { // map out array of seenBy id's //'$$message.seenBy'
                     $map: {
                       input: "$messages",
                       as: "message",
@@ -71,7 +71,7 @@ class Conversation {
                           //  $ne: [req.user._id, '$$message.seenBy']
                           },
                           then: 0,
-                          else: 1
+                          else: -1
                         }
                      }
                     }
@@ -84,18 +84,16 @@ class Conversation {
                   lastMsg: {"$arrayElemAt": ["$messages", -1]}
               }  
             },
-            // {
-            //   $addFields: {
-            //       seen: {
-            //         $in: [req.user._id, '$userIds'] // it works now
-            //       }
-            //   }  
-            // },
+            {
+              $addFields: {
+                  unseenMsg: {"$slice": ["$messages", "$unseen"]}
+              }  
+            },
             {
               $project: 
               {
                "messages": 0,
-
+               "unseenMsg": {"conversationId": 0, "createdAt": 0, "seenBy": 0, "sender": 0, "text": 0, "updatedAt": 0, "__v": 0}
               }
             }
 
