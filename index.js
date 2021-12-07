@@ -56,7 +56,7 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on("leave_room",async (data) => {
-    console.log(data)
+    // console.log(data)
     socket.leave(data);
     console.log(`User with ID: ${socket.id} leave room: ${data}`);
   });
@@ -81,13 +81,13 @@ io.sockets.on("connection", socket => {
      { $project: { "messages": 0, "unseenMsg": {"conversationId": 0, "createdAt": 0, "seenBy": 0, "sender": 0, "text": 0, "updatedAt": 0, "__v": 0}}}
     ])
     if(conversations){
-      console.log(conversations)
+      // console.log(conversations)
       io.to(socket.id).emit("all_conv", conversations)
     }
   });
 
   socket.on("send_message",(data, senderName, nextUserId) => {
-    console.log(data, senderName, nextUserId)
+    // console.log(data, senderName, nextUserId)
     let newMessage = new messageModel({
       conversationId: data.room,
       sender: data.sender,
@@ -99,16 +99,15 @@ io.sockets.on("connection", socket => {
       // Norify next User
       notifyUser(senderName, nextUserId, saved.text)// Not Reminder
       io.to(data.room).emit("receive_message", saved)
-      io.to(socket.id).emit("count", data.room)
+      // io.to(socket.id).emit("count", data.room)
     })
   });
 
-  socket.on("seen_msg",async (unseen, convId) => {
+  socket.on("seen_msg",async (msg, userId) => {
     console.log("******************************************************************")
-    console.log(convId)
-    let a = await messageModel.aggregate([
-      {$match : { convsersationId: convId}}
-  ])
+    console.log(msg._id, "msgId")
+    console.log(userId, "UserId")
+    let a = await messageModel.updateOne({_id: msg._id}, {$addToSet: {seenBy: new mongoose.Types.ObjectId(userId)}})
   console.log("seen_msg________________________________", a)
   });
 
@@ -119,11 +118,11 @@ io.sockets.on("connection", socket => {
 
 // Send Notification for One to One Conversation
 async function notifyUser(senderName, nextUserId, message) {
-  console.log(senderName, nextUserId, message)
-  console.log(mongoose.Types.ObjectId(nextUserId))
+  // console.log(senderName, nextUserId, message)
+  // console.log(mongoose.Types.ObjectId(nextUserId))
   await User.findOne({_id: nextUserId})
   .then((user) => {
-    console.log(user);
+    // console.log(user);
     notification(user.expoPushToken, `New Message from ${senderName}`, message)
   })
   
