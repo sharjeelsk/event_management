@@ -104,11 +104,11 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on("seen_msg",async (msg, userId) => {
-  //   console.log("******************************************************************")
-  //   console.log(msg._id, "msgId")
-  //   console.log(userId, "UserId")
-  //   let a = await messageModel.updateOne({_id: msg._id}, {$addToSet: {seenBy: new mongoose.Types.ObjectId(userId)}})
-  // console.log("seen_msg________________________________", a)
+    console.log("******************************************************************")
+    console.log(msg._id, "msgId")
+    console.log(userId, "UserId")
+    let a = await messageModel.updateOne({_id: msg._id}, {$addToSet: {seenBy: new mongoose.Types.ObjectId(userId)}})
+  console.log("seen_msg________________________________", a)
   });
 
   socket.on("disconnect", () => {
