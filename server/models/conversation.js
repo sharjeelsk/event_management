@@ -15,7 +15,8 @@ const ConversationSchema = new mongoose.Schema(
     },
     eventId: {
       type: ObjectId, ref: "Event"
-    }
+    },
+    lastMsg: {}
   },
   { timestamps: true }
 );

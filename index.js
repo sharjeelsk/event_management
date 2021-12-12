@@ -14,7 +14,7 @@ const socketio = require("socket.io")
 const server = http.createServer(app)
 const io = socketio(server, {
   cors: {
-    origin: ["http://localhost:3000","http://localhost:3001", "http://localhost:3006"],
+    origin: ["http://localhost:3000","http://localhost:3001", "http://localhost:3006", "http://localhost:57216"],
     methods: ["GET", "POST"],
   },
 });
@@ -39,28 +39,112 @@ let messageModel = require("./server/models/message")
 let Conv = require("./server/models/conversation");
 const { userInfo } = require("os");
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let onlineUsers = [];
+
+const addNewUser = (username, socketId) => {
+  !onlineUsers.some((user) => user.username === username) &&
+    onlineUsers.push({ username, socketId });
+};
+
+const removeUser = (socketId) => {
+  onlineUsers = onlineUsers.filter((user) => user.socketId !== socketId);
+};
+
+const getUser = (username) => {
+  return onlineUsers.find((user) => user.username === username);
+};
+
 //Socket //middleware remaining
 io.sockets.on("connection", socket => {
-  console.log(`User Connected: ${socket.id}`);
 
+  console.log(`User Connected: ${socket.id}`);
+  //Leave Room
+  socket.on("event_connect",async (userId) => {
+    addNewUser(userId, socket.id);
+    console.log(onlineUsers)
+  });
+
+
+  //Join Msg
   socket.on("join_room",async (data, userId, unseenMsg) => {
     socket.join(data);
+    
+    console.log(onlineUsers.length)
+    // console.log(userId, data, unseenMsg)
     console.log(`User with ID: ${socket.id} joined room: ${data}`);
     await messageModel.aggregate([{$match : { conversationId: new mongoose.Types.ObjectId(data)}}])
       .then(async (messages) => {
+        // console.log(messages)
         await messageModel.updateMany({_id: {$in: unseenMsg}}, {$addToSet: {seenBy: userId}})
         .then(()=> {
+          // console.log(messages)
           io.to(data).emit("all-msg", messages);
         })
       })
   });
 
+
+
+  //Leave Room
   socket.on("leave_room",async (data) => {
-    // console.log(data)
+    console.log(data, "leave")
     socket.leave(data);
     console.log(`User with ID: ${socket.id} leave room: ${data}`);
   });
 
+
+
+  //User Convesation
   socket.on("all_conv", async (userId) => {
     let conversations = await Conv.aggregate([
       { $match: { members: {$in: [new mongoose.Types.ObjectId(userId)]}}},
@@ -76,7 +160,7 @@ io.sockets.on("connection", socket => {
                as: "message",
                in:  { $cond: {if: {$in: [ new mongoose.Types.ObjectId(userId), "$$message.seenBy" ] }, then: 0, else: -1}}}}}}
      }, 
-     { $addFields: { lastMsg: {"$arrayElemAt": ["$messages", -1]}}},
+    //  { $addFields: { lastMsg: {"$arrayElemAt": ["$messages", -1]}}},
      { $addFields: { unseenMsg: {"$slice": ["$messages", "$unseen"]}}},
      { $project: { "messages": 0, "unseenMsg": {"conversationId": 0, "createdAt": 0, "seenBy": 0, "sender": 0, "text": 0, "updatedAt": 0, "__v": 0}}}
     ])
@@ -86,35 +170,145 @@ io.sockets.on("connection", socket => {
     }
   });
 
-  socket.on("send_message",(data, senderName, nextUserId) => {
-    // console.log(data, senderName, nextUserId)
+
+
+  //send Message
+  socket.on("send_message", async(data, senderName, nextUserId, socketId) => {
+    let a = await io.sockets.adapter.rooms.get(data.room);
+    console.log(data.room)
+    console.log(a)
     let newMessage = new messageModel({
       conversationId: data.room,
       sender: data.sender,
-      text : data.text
+      text : data.text,
+      seenBy: [ data.sender ]
   });
     newMessage.save()
-    .then((saved) => {
+    .then( async (saved) => {
       console.log("COnv ID", data.room)
-      // Norify next User
-      notifyUser(senderName, nextUserId, saved.text)// Not Reminder
-      io.to(data.room).emit("receive_message", saved)
-      // io.to(socket.id).emit("count", data.room)
+      let updateConv = await Conv.findOneAndUpdate({_id: saved.conversationId}, {$set: {lastMsg: saved}})
+      if(updateConv) {
+        let convUsers = updateConv.members
+        notifyUser(senderName, nextUserId, saved.text)// Not Reminder
+
+        let rm = Array.from(a);
+    
+        console.log("roomuserarray",rm, "onlineuserarray",onlineUsers)
+        // let roomUsers = onlineUsers.filter((user) => user.convId === data.room);
+        // console.log(roomUsers)
+        // roomUsers.forEach(user => {
+          // rm.forEach((socketUser) => {
+          //   onlineUsers.forEach((onlineUser) => {
+          //     if(socketUser === onlineUser.socketId){
+          //       console.log("Recieve Message to:", socketUser)
+          //     } else {
+          //       console.log("increase count to:", socketUser)
+          //     }
+          //   })
+          // })
+          // for(let i=0;i<=rm.length;i++){
+          //   for(let j = 0;j<=onlineUsers;j++){
+          //     //rm[i]===onlineuserarray
+          //   }
+          // }
+          // io.to(data.room).emit("receive_message",saved, rm);
+
+          onlineUsers.map(user=>{
+            if(convUsers.includes(user.username)){
+              //yaha pe check if socket id of this user is in roomusrarray
+              if(rm.includes(user.socketId)){
+                //yhaha pe wo user room me hai to uska count mat increase karo
+                console.log("do baar")
+                  console.log("recive msg",user.socketId)
+                  io.to(user.socketId).emit("receive_message",saved, rm);
+              }else{
+                //yaha pe wo user room me nahi hai
+                io.to(user.socketId).emit("count",saved.conversationId);
+                console.log("increase count",user.socketId)
+              }
+            }
+          })
+
+
+          // io.to(data.room).emit("receive_message",saved, rm);
+        // })
+        // io.to(data.room).emit("receive_message",saved, rm);
+        // io.to(socket.id).emit("roomD")
+      }
     })
   });
 
+
+
+  // Seen Message
   socket.on("seen_msg",async (msg, userId) => {
-    console.log("******************************************************************")
-    console.log(msg._id, "msgId")
-    console.log(userId, "UserId")
+    // console.log("******************************************************************")
+    // console.log(msg._id, "msgId")
+    // console.log(userId, "UserId")
+    console.log(msg, userId)
     let a = await messageModel.updateOne({_id: msg._id}, {$addToSet: {seenBy: new mongoose.Types.ObjectId(userId)}})
   console.log("seen_msg________________________________", a)
   });
 
+
+
+  // Disconnect
   socket.on("disconnect", () => {
+    removeUser(socket.id);
+    console.log(onlineUsers.length)
     console.log("User Disconnected", socket.id);
   });
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Send Notification for One to One Conversation
 async function notifyUser(senderName, nextUserId, message) {
@@ -123,7 +317,7 @@ async function notifyUser(senderName, nextUserId, message) {
   await User.findOne({_id: nextUserId})
   .then((user) => {
     // console.log(user);
-    notification(user.expoPushToken, `New Message from ${senderName}`, message)
+    // notification(user.expoPushToken, `New Message from ${senderName}`, message)
   })
   
   // let senderName = "";

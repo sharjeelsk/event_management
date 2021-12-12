@@ -89,6 +89,7 @@ class Conversation {
                   unseenMsg: {"$slice": ["$messages", "$unseen"]}
               }  
             },
+            { $sort : { "lastMsg.createdAt": -1 } },
             {
               $project: 
               {
