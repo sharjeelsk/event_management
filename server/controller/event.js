@@ -37,6 +37,76 @@ class Event {
           }
     }
 
+    async eventsNearMe(req, res) {
+      try {
+          let events = await eventModel.aggregate([
+            {
+              "$search": {
+                "index": "nearByEvent",
+                    
+                      "geoWithin": {
+                        "circle": {
+                          "center": {
+                            "type": "Point",
+                            "coordinates": [req.body.position.longitude, req.body.position.latitude]
+                          },
+                          "radius": 20000
+                        },
+                        "path": "sLocation"
+                      }
+                    
+              }
+            }
+          ])
+          if (events) {
+            return res.status(200).json({ count: events.length, result: events, msg: "Success"});
+              }
+        } catch (err) {
+          console.log(err)
+          return res.status(500).json({ result: err, msg: "Error"});
+        }
+  }
+
+    async searchEvent(req, res) {
+      try {
+          let events = await eventModel.aggregate([
+            {
+              "$search": {
+                "index": "eventSearch",
+                "compound": {
+                  "must": [
+                    {
+                      "autocomplete": {
+                        "query": req.body.query,
+                        "path": "name"
+                      }
+                    },
+                    {
+                      "geoWithin": {
+                        "circle": {
+                          "center": {
+                            "type": "Point",
+                            "coordinates": [req.body.position.longitude, req.body.position.latitude]
+                          },
+                          "radius": 50000
+                        },
+                        "path": "sLocation"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ])
+          if (events) {
+            return res.status(200).json({ count: events.length, result: events, msg: "Success"});
+              }
+        } catch (err) {
+          console.log(err)
+          return res.status(500).json({ result: err, msg: "Error"});
+        }
+  }
+
     async allEventBids(req, res) {
       try {
           let events = await eventModel.find({})
@@ -113,6 +183,10 @@ class Event {
                         description, 
                         type, 
                         location,
+                        sLocation: { 
+                          type: "Point", 
+                          coordinates: [ location.longitude, location.latitude ] 
+                        },
                         start, 
                         end, 
                         reqServices,

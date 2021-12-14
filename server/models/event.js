@@ -47,6 +47,7 @@ const eventSchema = new mongoose.Schema(
               require: true,
             },
         location: { },
+        sLocation: {},
         status: {
             type: String,
             enum: ['Not Started', "Live", "Over"],
