@@ -4,8 +4,8 @@ const eventController = require("../controller/event");
 const { isAuthorized } = require("../middleware/reqAuth");
 
 router.get("/all-event", isAuthorized, eventController.getAllEvent);
-router.get("/events-nearme", eventController.eventsNearMe);
-router.get("/search-event", eventController.searchEvent);
+router.post("/events-nearme", eventController.eventsNearMe);
+router.post("/search-event", eventController.searchEvent);
 router.get("/all-event-bids", isAuthorized, eventController.allEventBids);
 router.post("/single-event", isAuthorized, eventController.getSingleEvent);
 router.get("/user-event", isAuthorized, eventController.getUserEvents);
