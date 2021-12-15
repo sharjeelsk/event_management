@@ -133,10 +133,15 @@ class Event {
                 let {eventId} = req.body
                 console.log(eventId)
                 await eventModel.findOne({_id: new mongoose.Types.ObjectId(eventId)})
-                .populate({
+                .populate([{
                   path: "bids",
                   model: "Bid",
-                })
+                  populate: {
+                    path: "userId",
+                    model: "User"
+                  }
+                },
+              ])
                 .then((event) => {
                   console.log(event)
                   return res.status(200).json({ result: event, msg: "Success"});
