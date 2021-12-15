@@ -68,6 +68,21 @@ const userSchema = new mongoose.Schema(
     expoPushToken: {
       type: String,
       default: null
+    },
+    rating: {
+      avg: {
+        type: Number,
+        default: 0
+      },
+      count: {
+        type: Number,
+        default: 0
+      },
+      total: {
+        type: Number,
+        default: 0
+      }
+
     }
 
 
