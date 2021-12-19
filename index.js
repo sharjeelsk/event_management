@@ -384,6 +384,7 @@ app.use("/api/msg", require("./server/routes/message"))
 app.use("/api/report", require("./server/routes/report"))
 app.use("/api/userContact", require("./server/routes/userContact"))
 app.use("/api/reminder", require("./server/routes/reminder"))
+app.use("/api/eventForm", require("./server/routes/eventForm"))
 
 
 
