@@ -7,5 +7,6 @@ const { isAuthorized } = require("../middleware/reqAuth");
 router.post("/get-eventForm", isAuthorized, eventFormController.getEventForm);
 router.post("/create-eventForm", isAuthorized, eventFormController.postEventForm);
 router.post("/event-feedbacks", isAuthorized, eventFormController.eventFeedbacks);
+router.post("/submit-eventForm", isAuthorized, eventFormController.submitForm);
 
 module.exports = router;

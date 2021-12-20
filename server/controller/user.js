@@ -18,12 +18,12 @@ class User {
 
   async getSingleUser(req, res) {
       try {
-        // let User = await userModel
-        //   .findOne({mobileNo: req.user.mobileNo})
-        //   .select("name email mobileNo address organisation myEvents myBids myServices bidedEvent img")
-        //   .populate({path: 'myEvents myBids myServices', options: { sort: {'createdAt': -1} }});
+        let user = await userModel
+          .findOne({_id: req.user._id})
+          .select("name email mobileNo address organisation myEvents myBids myServices bidedEvent img")
+          .populate({path: 'myEvents myBids myServices', options: { sort: {'createdAt': -1} }});
 
-        let user = await userModel.aggregate([
+        let b = await userModel.aggregate([
           {
             $facet: {
               "user": [
@@ -87,10 +87,12 @@ class User {
             }
           }
         ])
+        
           // aggregate user
           // get unseen convsersations
           // get reminders count
-        if (user) {
+        if (user && b) {
+          user.reminderCount = b.reminders
           return res.status(200).json({ result: user, msg: "Success"});
         }
       } catch (err) {
