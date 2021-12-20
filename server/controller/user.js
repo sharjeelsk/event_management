@@ -18,12 +18,80 @@ class User {
 
   async getSingleUser(req, res) {
       try {
-        let User = await userModel
-          .findOne({mobileNo: req.user.mobileNo})
-          .select("name email mobileNo address organisation myEvents myBids myServices bidedEvent img")
-          .populate({path: 'myEvents myBids myServices', options: { sort: {'createdAt': -1} }});
-        if (User) {
-          return res.status(200).json({ result: User, msg: "Success"});
+        // let User = await userModel
+        //   .findOne({mobileNo: req.user.mobileNo})
+        //   .select("name email mobileNo address organisation myEvents myBids myServices bidedEvent img")
+        //   .populate({path: 'myEvents myBids myServices', options: { sort: {'createdAt': -1} }});
+
+        let user = await userModel.aggregate([
+          {
+            $facet: {
+              "user": [
+                {$match: {_id: req.user._id}}
+              ],
+              "reminders": [
+
+                {$match: {_id: req.user._id}},
+                {$lookup: 
+                  {
+                      from: 'reminders',
+                      localField: '_id',
+                      foreignField: 'users',
+                      as: 'reminderss'
+                  }},
+                  {
+                    $project:{
+                            count:{$size:"$reminderss"},
+                        }
+                }
+              ],
+              "conversation": [
+                {$match: {_id: req.user._id}},
+                {$lookup: 
+                  {
+                      from: 'conversations',
+                      localField: '_id',
+                      foreignField: 'members',
+                      as: 'conversation'
+                  }},
+                // {$lookup: 
+                // {
+                //     from: 'messages',
+                //     localField: '_id',
+                //     foreignField: 'conversationId',
+                //     as: 'messages'
+                // }},
+                // {
+                //   $addFields: {
+                //     unseen: {
+                //       $sum: { // map out array of seenBy id's //'$$message.seenBy'
+                //         $map: {
+                //           input: "$messages",
+                //           as: "message",
+                //           in:  {
+                //             $cond: {
+                //               if: {
+                //                 $in: [ req.user._id, "$$message.seenBy" ]
+                //               //  $ne: [req.user._id, '$$message.seenBy']
+                //               },
+                //               then: 0,
+                //               else: -1
+                //             }
+                //          }
+                //         }
+                //       }
+                //     }
+                //   }
+                // },
+              ]
+            }
+          }
+        ])
+          // aggregate user
+          // get unseen convsersations
+          // get reminders count
+        if (user) {
+          return res.status(200).json({ result: user, msg: "Success"});
         }
       } catch (err) {
         console.log(err)
