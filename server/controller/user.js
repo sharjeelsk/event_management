@@ -1,5 +1,6 @@
 const userModel = require("../models/user");
 const Conv = require("../models/conversation");
+const Bid = require("../models/bid");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { AvailableAddOnPage } = require("twilio/lib/rest/preview/marketplace/availableAddOn");
@@ -215,9 +216,9 @@ class User {
 
   async rateUser(req, res) {
     try {
-      let { userId, stars} = req.body;
+      let { userId, stars, bidId} = req.body;
       console.log(req.body.stars)
-      if(!userId || !stars && stars !== 0){
+      if(!bidId || !userId || !stars && stars !== 0){
         return res.status(500).json({ result: "Data Missing", msg: "Error"});
       } else {
         await userModel.findById(userId)
@@ -225,8 +226,11 @@ class User {
           // let avg = ((user.rating.avg * user.rating.total) + stars) / (user.rating.total + 1)
           let avg = (user.rating.total + stars) / (user.rating.count +1)
           await userModel.updateOne({_id: userId}, {$set: {"rating.avg": Math.round(avg * 10) / 10, "rating.total": user.rating.total+ stars}, $inc: {"rating.count": 1}})
-          .then((updated) => {
-            return res.status(200).json({ result:Math.round(avg * 10) / 10, msg: "Success"});
+          .then( async (updated) => {
+            await Bid.updateOne({_id: bidId}, {$set: {rating: true}})
+            .then((updatedBid) => {
+              return res.status(200).json({ result:Math.round(avg * 10) / 10, msg: "Success"});
+            })
           })
           
         })

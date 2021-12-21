@@ -81,7 +81,10 @@ const eventSchema = new mongoose.Schema(
             type: ObjectId, ref: "User"
             }],
         members: [],
-        form: []
+        form: [],
+        feedbackUsers: [{
+            type: ObjectId, ref: "User"
+        }]
         },
     { timestamps: true }
 );

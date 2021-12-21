@@ -36,7 +36,11 @@ const bidSchema = new mongoose.Schema(
         enum: ["Pending", "Approved"],
         default: "Pending",
         required: true
-        }
+        },
+    rating: {
+        type: Boolean,
+        default: false
+    }
   },
   { timestamps: true }
 );

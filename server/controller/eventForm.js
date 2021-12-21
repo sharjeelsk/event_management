@@ -101,9 +101,12 @@ class eventForm {
                     formData
                 })
                 newForm.save()
-                .then((savedForm) => {
-                    console.log(savedForm)
+                .then(async (savedForm) => {
+                    await Event.updateOne({_id: eventId}, {$addToSet: {feedbackUsers: req.user._id}})
+                    .then((updatedEvent) => {
+                        console.log(savedForm)
                     return res.status(200).json({ result: savedForm, msg: "Success"});
+                    })
                 })
             }
           } catch (err) {
