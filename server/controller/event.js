@@ -166,8 +166,8 @@ class Event {
 
     async createEvent(req, res) {
         try {
-            let { mobileNo, email, address, name, description, type, location, start, end, reqServices, eventAddress} = req.body;
-            if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress){
+            let { mobileNo, email, address, name, description, type, location, start, end, reqServices, eventAddress, maxMembers, allowContact} = req.body;
+            if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress || ! allowContact){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
               let contactList;
@@ -202,7 +202,9 @@ class Event {
                         totalSubs: 1,
                         eventAddress,
                         subs: req.user._id,
-                        members: contactList
+                        members: contactList,
+                        maxMembers,
+                        allowContact
                     })
                     await event.save().then(async(result) => {
                       const startEvent = schedule.scheduleJob(start, async () => {
@@ -303,27 +305,32 @@ class Event {
 
     async joinEvent(req, res) {
         try {
-            let { eventId } = req.body;
-            if(!eventId){
+            let { eventId, maxMembers, joined } = req.body;
+            if(!eventId || !maxMembers || !joined){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                         var query = {
                          _id: eventId,
                          subs: {$ne: req.user._id}
                           };
-                        await eventModel.updateOne(query, {$inc: {totalSubs: "+1"}})
-                        .then(async()=> {
-                          await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: req.user._id}})
-                          .then(async()=> {
-                            await User.updateOne({_id: req.user._id}, {$addToSet: {myEvents: eventId}})
+
+                          if(joined >= maxMembers){
+                            return res.status(200).json({ result: "Event Full", msg: "Success" });
+                          } else {
+                            await eventModel.updateOne(query, {$inc: {totalSubs: "+1"}})
                             .then(async()=> {
-                              await Conversation.updateOne({eventId: eventId}, {$push: {members: req.user._id}})
-                              .then(()=> {
-                                return res.status(200).json({ result: "Joined", msg: "Success" });
+                              await eventModel.updateOne({_id: eventId}, {$addToSet: {subs: req.user._id}})
+                              .then(async()=> {
+                                await User.updateOne({_id: req.user._id}, {$addToSet: {myEvents: eventId}})
+                                .then(async()=> {
+                                  await Conversation.updateOne({eventId: eventId}, {$push: {members: req.user._id}})
+                                  .then(()=> {
+                                    return res.status(200).json({ result: "Joined", msg: "Success" });
+                                  })
+                                })
                               })
                             })
-                          })
-                        })
+                          }
             }
           } catch (err) {
             console.log(err)
