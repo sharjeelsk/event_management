@@ -167,10 +167,17 @@ class Event {
     async createEvent(req, res) {
         try {
             let { mobileNo, email, address, name, description, type, location, start, end, reqServices, eventAddress, maxMembers, allowContact} = req.body;
-            if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress || ! allowContact){
+            if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress || !maxMembers || ! allowContact){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
               let contactList;
+              let membersCount;
+
+              if(maxMembers === false){
+                membersCount = null
+              } else {
+                membersCount = Number(maxMembers)
+              }
                 if(type === "PRIVATE"){
                   let { contacts }= req.body;
                   contactList = contacts
@@ -181,6 +188,8 @@ class Event {
                   ///take ContactId and groups Array and set it on events Members field
                   // run a function on userCOntactId groups for sending notification to existing customer
                   // and sms to non existing user
+
+                  
 
                     let event = new eventModel({
                         organiserId: req.user._id,
@@ -203,7 +212,7 @@ class Event {
                         eventAddress,
                         subs: req.user._id,
                         members: contactList,
-                        maxMembers,
+                        maxMembers: membersCount,
                         allowContact
                     })
                     await event.save().then(async(result) => {
@@ -314,7 +323,7 @@ class Event {
                          subs: {$ne: req.user._id}
                           };
 
-                          if(joined >= maxMembers){
+                          if(joined >= maxMembers && maxMembers != null){
                             return res.status(200).json({ result: "Event Full", msg: "Success" });
                           } else {
                             await eventModel.updateOne(query, {$inc: {totalSubs: "+1"}})

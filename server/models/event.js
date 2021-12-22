@@ -83,9 +83,7 @@ const eventSchema = new mongoose.Schema(
         members: [],
         form: [],
         maxMembers:{
-            type: Number,
-            // require: true,
-            // default: 0
+            type: String
         },
         allowContact: {
             type: Boolean,
