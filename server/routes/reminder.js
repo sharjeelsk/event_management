@@ -5,5 +5,6 @@ const { isAuthorized } = require("../middleware/reqAuth");
 
 router.get("/all-reminder", isAuthorized, reminderController.getAllReminder);
 router.get("/user-reminder", isAuthorized, reminderController.getUserReminder);
+router.post("/delete-reminder", isAuthorized, reminderController.deleteReminder);
 
 module.exports = router;

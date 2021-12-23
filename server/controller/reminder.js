@@ -36,6 +36,26 @@ class Reminder {
           return res.status(500).json({ result: err, msg: "Error"});
         }
   }
+
+  async deleteReminder(req, res) {
+    try {
+      let {reminderId} = req.body;
+      if(!reminderId){
+        return res.status(500).json({ result: "Data Missing", msg: "Success"});
+      } else {
+        await reminderSchema.updateOne({_id: reminderId}, {$pull: {users: req.user._id}})
+        .then((reminders) => {
+            console.log(reminders)
+            return res.status(200).json({ result: "Deleted", msg: "Success"});
+        })
+        }
+      } catch (err) {
+        console.log(err)
+        return res.status(500).json({ result: err, msg: "Error"});
+      }
+}
+
+  
 }
 
 const reminderController = new Reminder();
