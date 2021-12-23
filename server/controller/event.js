@@ -166,13 +166,16 @@ class Event {
 
     async createEvent(req, res) {
         try {
+          console.log(req.body, "1")
             let { mobileNo, email, address, name, description, type, location, start, end, reqServices, eventAddress, maxMembers, allowContact} = req.body;
-            if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress || !maxMembers || ! allowContact){
+            console.log(maxMembers, allowContact, "2")
+            if(!mobileNo || !email || !address || !name || !description || !type || !location || !start || !end || !reqServices || !eventAddress){
+              console.log("missing", maxMembers, "allow", allowContact)
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
               let contactList;
               let membersCount;
-
+              console.log(maxMembers, allowContact, "3")
               if(maxMembers === false){
                 membersCount = null
               } else {
@@ -315,7 +318,7 @@ class Event {
     async joinEvent(req, res) {
         try {
             let { eventId, maxMembers, joined } = req.body;
-            if(!eventId || !maxMembers || !joined){
+            if(!eventId){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                         var query = {
