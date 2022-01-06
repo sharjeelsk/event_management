@@ -46,9 +46,10 @@ class Service {
     }
 
     async createService(req, res) {
+      console.log("abcd")
         try {
-            let { categoryId, category, subCategory, quantity, price } = req.body;
-            if( !category || !subCategory || !quantity || !price ){
+            let { categoryId, category, subCategory, quantity, price, unit } = req.body;
+            if( !category || !subCategory || !quantity || !price || !unit){
                 return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
               console.log(req.body)
@@ -59,7 +60,7 @@ class Service {
                       name: category,
                       user: req.user._id
                     })
-                    await createCategory.save().then(async(cat) => {
+                    createCategory.save().then(async(cat) => {
                       console.log("New Category is Being Created...")
                       console.log(cat)
                       
@@ -69,9 +70,13 @@ class Service {
                         user: req.user._id,
                         subCategory,
                         quantity,
-                        price
+                        price,
+                        unit
                       })
-                      await service.save().then(async(result) => {
+                      console.log(service)
+                     service.save().then(async(result) => {
+                        console.log("abcd")
+                        console.log(result)
                           console.log("Service Created Successfully... Updating User Services...")
                           await User.updateOne({mobileNo: req.user.mobileNo}, {$push: {myServices: result._id}})
                           .then( user => {
@@ -87,10 +92,12 @@ class Service {
                       user: req.user._id,
                       subCategory,
                       quantity,
-                      price
+                      price,
+                      unit
 
                     })
                     await service.save().then(async(result) => {
+                      console.log(result)
                         console.log("Service Created Successfully... Updating User Services...")
                         await User.updateOne({mobileNo: req.user.mobileNo}, {$push: {myServices: result._id}})
                         .then( user => {

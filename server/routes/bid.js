@@ -12,5 +12,7 @@ router.post("/update-bid", isAuthorized, bidController.updateBid);
 router.post("/delete-bid", isAuthorized, bidController.deleteBid);
 
 router.post("/approve-bid", isAuthorized, bidController.approveBid);
+router.post("/cancel-org", isAuthorized, bidController.cancelBidOrganiser);
+router.post("/cancel-ven", isAuthorized, bidController.cancelBidVendor);
 
 module.exports = router;

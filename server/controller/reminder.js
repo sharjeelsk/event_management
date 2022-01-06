@@ -27,6 +27,7 @@ class Reminder {
     async getUserReminder(req, res) {
       try {
           await reminderSchema.find({users: {$in: req.user._id}})
+          .sort({ _id: -1 })
           .then((reminders) => {
               console.log(reminders)
               return res.status(200).json({ result: reminders, msg: "Success"});

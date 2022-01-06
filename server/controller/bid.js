@@ -41,6 +41,7 @@ class Bid {
                         .populate("myBids")
                         .select("myBids")
             if(user){
+              console.log(user.myBids)
                 return res.status(200).json({ result: user, msg: "Success"});
             }
           } catch (err) {
@@ -121,12 +122,12 @@ class Bid {
                     console.log(updateOps)
                     await bidModel.findOneAndUpdate({_id: bidId}, {$set: updateOps})
                       .then((updatedbid)=> {
-                      //notify Organiser
+                      console.log(updatedbid)
                         Event.findOne({_id: updatedbid.eventId})
                         .then((foundedEvent) => {
                           // notify(foundedEvent.organiserId, `Bid ${foundedEvent.name} Updated`, `${req.user.name} - Vendor`)
                         })
-                        return res.status(200).json({ result: updatedBid, msg: "Success" });
+                        return res.status(200).json({ result: updatedbid, msg: "Success" });
                     })       
                 }
           } catch (err) {
@@ -226,19 +227,21 @@ class Bid {
         if(!bidId){
             return res.status(500).json({ result: "Data Missing", msg: "Error"});
         } else {
+          console.log("abcd")
                     let data = {
                       value: true,
                       date: new Date().toISOString()
                     }
-                    await bidModel.findByIdAndUpdate({_id: bidId}, {$set: {"cancel.vendor": data}})
-                    .then(cancelBid => {
+                    await bidModel.findByIdAndUpdate({_id: bidId}, {$set: {"cancel.vendor": data, status: "Cancelled"}})
+                    .then(async(cancelBid) => {
                       console.log("cancelled")
                       await Event.findOneAndUpdate({_id: cancelBid.eventId}, {$pull: {bids: cancelBid._id, subs: req.user._id}, $inc: {totalBids: -1, totalSubs: -1}})
-                      .then(foundEvent => {
+                      .then(async(foundEvent) => {
                         console.log(foundEvent.name)
                         await User.updateOne({_id: req.user._id}, {$pull: {myEvents: cancelBid.eventId, bidedEvent: cancelBid.eventId}})
-                        .then(updatedUser => {
+                        .then(async(updatedUser) => {
                             notify(foundEvent.organiserId, `Bid Cancellation Accepted For Event-${foundEvent.name}`, `by ${req.user.name} - Vendor`, cancelBid._id)
+                            return res.status(200).json({ result: cancelBid, msg: "Success" });
                         })
                           // return res.status(200).json({ result: cancelBid, msg: "Success" });
                       })
