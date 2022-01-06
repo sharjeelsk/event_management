@@ -37,6 +37,22 @@ const bidSchema = new mongoose.Schema(
         default: "Pending",
         required: true
         },
+    cancel: {
+        organiser: {
+            value: {
+                type: Boolean,
+                default: false
+            },
+            date: Date
+        },
+        vendor: {
+            value: {
+                type: Boolean,
+                default: false
+            },
+            date: Date
+        }
+    },
     rating: {
         type: Boolean,
         default: false
