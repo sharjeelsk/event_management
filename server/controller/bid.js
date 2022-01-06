@@ -191,12 +191,75 @@ class Bid {
             return res.status(500).json({ result: err, msg: "Error"});
           }
     }
+
+    async cancelBidOrganiser(req, res) {
+      try {
+          let { bidId } = req.body;
+          if(!bidId){
+              return res.status(500).json({ result: "Data Missing", msg: "Error"});
+          } else {
+                      let data = {
+                        value: true,
+                        date: new Date().toISOString()
+                      }
+                      let cancelBid = await bidModel.findByIdAndUpdate({_id: bidId}, {$set: {"cancel.organiser": data}})
+                      if(cancelBid) {
+                        console.log("cancelled")
+                        let foundEvent = await Event.findOne({_id: cancelBid.eventId})
+                        if(foundEvent) {
+                          console.log(foundEvent.name)
+                            notify(cancelBid.userId, `Bid Cancelled For Event-${foundEvent.name}`, `by ${req.user.name} - Organiser`, cancelBid._id)
+                            return res.status(200).json({ result: cancelBid, msg: "Success" });
+                        }
+                      }
+          }
+        } catch (err) {
+          console.log(err)
+          return res.status(500).json({ result: err, msg: "Error"});
+        }
+  }
+
+  
+  async cancelBidVendor(req, res) {
+    try {
+        let { bidId } = req.body;
+        if(!bidId){
+            return res.status(500).json({ result: "Data Missing", msg: "Error"});
+        } else {
+                    let data = {
+                      value: true,
+                      date: new Date().toISOString()
+                    }
+                    await bidModel.findByIdAndUpdate({_id: bidId}, {$set: {"cancel.vendor": data}})
+                    .then(cancelBid => {
+                      console.log("cancelled")
+                      await Event.findOneAndUpdate({_id: cancelBid.eventId}, {$pull: {bids: cancelBid._id, subs: req.user._id}, $inc: {totalBids: -1, totalSubs: -1}})
+                      .then(foundEvent => {
+                        console.log(foundEvent.name)
+                        await User.updateOne({_id: req.user._id}, {$pull: {myEvents: cancelBid.eventId, bidedEvent: cancelBid.eventId}})
+                        .then(updatedUser => {
+                            notify(foundEvent.organiserId, `Bid Cancellation Accepted For Event-${foundEvent.name}`, `by ${req.user.name} - Vendor`, cancelBid._id)
+                        })
+                          // return res.status(200).json({ result: cancelBid, msg: "Success" });
+                      })
+                    })
+                    
+                      
+                    
+        }
+      } catch (err) {
+        console.log(err)
+        return res.status(500).json({ result: err, msg: "Error"});
+      }
 }
+}
+
+
 
 async function notify(sendUserId, eventName, userName, itemIds) {
     await User.findOne({_id: sendUserId})
       .then((user)=> {
-        notification(user.expoPushToken, eventName, userName, itemId, "Bid", [user._id])
+        notification(user.expoPushToken, eventName, userName, itemIds, "Bid", [user._id])
       })
 }
 

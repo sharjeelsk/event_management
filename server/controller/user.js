@@ -289,6 +289,36 @@ class User {
     }
   }
 
+  async createUser(req, res) {
+    try {
+      let { name, email, mobileNo, country, city, address, organisation} = req.body;
+      if(!name || !email || !mobileNo || !country || !city || !address || !organisation){
+        return res.status(500).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        let newUser = new userModel({
+          name,
+          email,
+          mobileNo,
+          country,
+          city,
+          address,
+          organisation
+        })
+
+        newUser.save()
+        .then((savedUser) => {
+          //....
+          return res.status(200).json({ result: savedUser, msg: "Success"});
+        })
+              
+    
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
 
 }
 
