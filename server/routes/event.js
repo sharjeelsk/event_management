@@ -2,8 +2,16 @@ const express = require("express");
 const router = express.Router();
 const eventController = require("../controller/event");
 const { isAuthorized } = require("../middleware/reqAuth");
+const rateLimit = require('express-rate-limit')
 
-router.get("/all-event", isAuthorized, eventController.getAllEvent);
+const eventLimiter = rateLimit({
+	windowMs: 1 * 60 * 1000, // 15 minutes
+	max: 5, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
+
+router.get("/all-event", eventLimiter ,isAuthorized, eventController.getAllEvent);
 router.post("/events-nearme", eventController.eventsNearMe);
 router.post("/search-event", eventController.searchEvent);
 router.get("/all-event-bids", isAuthorized, eventController.allEventBids);
