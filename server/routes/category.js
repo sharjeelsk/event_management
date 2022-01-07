@@ -6,7 +6,7 @@ const { isAuthorized } = require("../middleware/reqAuth");
 router.get("/all-category", isAuthorized, categoryController.getAllCategory);
 router.get("/single-category", isAuthorized, categoryController.getSingleCategory);
 
-router.post("/create-category", isAuthorized, categoryController.createCategory);
+router.post("/create-category", categoryController.createCategory);
 router.post("/update-category", isAuthorized, categoryController.updateCategory);
 router.post("/delete-category", isAuthorized, categoryController.deleteCategory);
 

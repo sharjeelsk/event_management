@@ -39,14 +39,14 @@ class Category {
 
     async createCategory(req, res) {
         try {
-            let { name } = req.body;
+            let { name, approximation} = req.body;
             if(!name){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                     let newName = name.charAt(0).toUpperCase() + name.slice(1);
                     let newCatgeory = new categoryModel({
                         name: newName,
-                        user: req.user._id
+                        approximation
                     })
                     await newCatgeory.save().then((result) => {
                         console.log("Category Created Successfully")

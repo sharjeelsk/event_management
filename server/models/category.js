@@ -8,9 +8,8 @@ const categorySchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
-    user: {
-        type: ObjectId, ref: "User",
-        required: true
+    approximation:{
+      type: String,
     }
   },
   { timestamps: true }

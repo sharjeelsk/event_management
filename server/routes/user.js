@@ -44,6 +44,7 @@ router.get("/image/:filename", usersController.getSingleImg)
 router.get("/myApprovals", isAuthorized, usersController.getMyApprovals);
 router.post("/rate-user", usersController.rateUser);
 router.post("/search", usersController.search);
+router.post("/createUser", usersController.createUser);
 
 
 module.exports = router;

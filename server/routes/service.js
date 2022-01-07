@@ -11,4 +11,6 @@ router.post("/create-service", isAuthorized, serviceController.createService);
 router.post("/update-service", isAuthorized, serviceController.updateService);
 router.post("/delete-service", isAuthorized, serviceController.deleteService);
 
+router.post("/admin-createService", serviceController.AdmincreateService);
+
 module.exports = router;

@@ -152,6 +152,38 @@ class Service {
             return res.status(500).json({ result: err, msg: "Error"});
           }
     }
+
+    async AdmincreateService(req, res) {
+        try {
+            let { categoryId, category, subCategory, quantity, price, unit, userId, mobileNo} = req.body;
+            if( !category || !subCategory || !quantity || !price || !unit || !userId || ! mobileNo){
+                return res.status(201).json({ result: "Data Missing", msg: "Error"});
+            } else {
+                      let service = new ServiceModel({
+                      categoryId,
+                      category,
+                      user: userId,
+                      subCategory,
+                      quantity,
+                      price,
+                      unit
+
+                    })
+                    await service.save().then(async(result) => {
+                      console.log(result)
+                        console.log("Service Created Successfully... Updating User Services...")
+                        await User.updateOne({mobileNo: mobileNo}, {$push: {myServices: result._id}})
+                        .then( user => {
+                            console.log("User Updated Successfully")
+                            return res.status(200).json({ result: result, msg: "Success"});
+                        })
+                    })
+            }
+          } catch (err) {
+            console.log(err)
+            return res.status(500).json({ result: err, msg: "Error"});
+          }
+  }
 }
 
 const serviceController = new Service();
