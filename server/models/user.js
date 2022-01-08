@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    curr: {
+      type: String,
+      require: true,
+    },
     city: {
       type: String,
       require: true,

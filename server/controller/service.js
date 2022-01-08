@@ -154,35 +154,69 @@ class Service {
     }
 
     async AdmincreateService(req, res) {
-        try {
-            let { categoryId, category, subCategory, quantity, price, unit, userId, mobileNo} = req.body;
-            if( !category || !subCategory || !quantity || !price || !unit || !userId || ! mobileNo){
-                return res.status(201).json({ result: "Data Missing", msg: "Error"});
-            } else {
-                      let service = new ServiceModel({
-                      categoryId,
-                      category,
-                      user: userId,
-                      subCategory,
-                      quantity,
-                      price,
-                      unit
+      try {
+        let { categoryId, category, subCategory, quantity, price, unit } = req.body;
+        if( !category || !subCategory || !quantity || !price || !unit){
+            return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+          console.log(req.body)
+            let newCategory = category.charAt(0).toUpperCase() + category.slice(1);
+              if(categoryId === ''){
+                console.log("iin NULL")
+                let createCategory = new Category({
+                  name: category,
+                  user: req.user._id
+                })
+                createCategory.save().then(async(cat) => {
+                  console.log("New Category is Being Created...")
+                  console.log(cat)
+                  
+                  let service = new ServiceModel({
+                    categoryId: cat._id,
+                    category: newCategory,
+                    user: req.user._id,
+                    subCategory,
+                    quantity,
+                    price,
+                    unit
+                  })
+                  console.log(service)
+                 service.save().then(async(result) => {
+                    console.log("abcd")
+                    console.log(result)
+                      console.log("Service Created Successfully... Updating User Services...")
+                      await User.updateOne({mobileNo: req.user.mobileNo}, {$push: {myServices: result._id}})
+                      .then( user => {
+                          console.log("User Updated Successfully")
+                          return res.status(200).json({ result: result, msg: "Success"});
+                      })
+                  })
+                })
+              }
+                  let service = new ServiceModel({
+                  categoryId,
+                  category: newCategory,
+                  user: req.user._id,
+                  subCategory,
+                  quantity,
+                  price,
+                  unit
 
+                })
+                await service.save().then(async(result) => {
+                  console.log(result)
+                    console.log("Service Created Successfully... Updating User Services...")
+                    await User.updateOne({mobileNo: req.user.mobileNo}, {$push: {myServices: result._id}})
+                    .then( user => {
+                        console.log("User Updated Successfully")
+                        return res.status(200).json({ result: result, msg: "Success"});
                     })
-                    await service.save().then(async(result) => {
-                      console.log(result)
-                        console.log("Service Created Successfully... Updating User Services...")
-                        await User.updateOne({mobileNo: mobileNo}, {$push: {myServices: result._id}})
-                        .then( user => {
-                            console.log("User Updated Successfully")
-                            return res.status(200).json({ result: result, msg: "Success"});
-                        })
-                    })
-            }
-          } catch (err) {
-            console.log(err)
-            return res.status(500).json({ result: err, msg: "Error"});
-          }
+                })
+        }
+      } catch (err) {
+        console.log(err)
+        return res.status(500).json({ result: err, msg: "Error"});
+      }
   }
 }
 
