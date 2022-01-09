@@ -50,7 +50,7 @@ class Event {
                             "type": "Point",
                             "coordinates": [req.body.position.longitude, req.body.position.latitude]
                           },
-                          "radius": 20000
+                          "radius": 50000
                         },
                         "path": "sLocation"
                       }
@@ -73,28 +73,28 @@ class Event {
             {
               "$search": {
                 "index": "eventSearch",
-                "compound": {
-                  "must": [
-                    {
+                // "compound": {
+                  // "must": [
+                    // {
                       "autocomplete": {
                         "query": req.body.query,
                         "path": "name"
                       }
-                    },
-                    {
-                      "geoWithin": {
-                        "circle": {
-                          "center": {
-                            "type": "Point",
-                            "coordinates": [req.body.position.longitude, req.body.position.latitude]
-                          },
-                          "radius": 50000
-                        },
-                        "path": "sLocation"
-                      }
-                    }
-                  ]
-                }
+                    // },
+                    // {
+                    //   "geoWithin": {
+                    //     "circle": {
+                    //       "center": {
+                    //         "type": "Point",
+                    //         "coordinates": [req.body.position.longitude, req.body.position.latitude]
+                    //       },
+                    //       "radius": 50000
+                    //     },
+                    //     "path": "sLocation"
+                    //   }
+                    // }
+                  // ]
+                // }
               }
             }
           ])
@@ -106,6 +106,68 @@ class Event {
           return res.status(500).json({ result: err, msg: "Error"});
         }
   }
+
+  async filter(req, res) {
+    try {
+      let {option} = req.body
+      if(!option) {
+        return res.status(200).json({ result: "Data Missing", msg: "Success"});
+      }
+      else {
+        if(option === "nearMe"){
+          let events = await eventModel.aggregate([
+            {
+              "$search": {
+                "index": "nearByEvent",
+                    
+                      "geoWithin": {
+                        "circle": {
+                          "center": {
+                            "type": "Point",
+                            "coordinates": [req.body.position.longitude, req.body.position.latitude]
+                          },
+                          "radius": 50000
+                        },
+                        "path": "sLocation"
+                      }   
+              }
+            }
+          ])
+          return res.status(500).json({ result: events, msg: "Success"});
+        } 
+        if(option === "name"){
+          let events = await eventModel.aggregate([
+            {
+              "$search": {
+                "index": "eventSearch",
+
+                      "autocomplete": {
+                        "query": req.body.query,
+                        "path": "name"
+                      }
+              }
+            }
+          ])
+          return res.status(500).json({ result: events, msg: "Success"});
+        }
+        if(option === "oldest"){
+          let events = await eventModel.aggregate([
+            {$sort: {createdAt: -1}}
+          ])
+          return res.status(500).json({ result: events, msg: "Success"});
+        }
+        if(option === "newest"){
+          let events = await eventModel.aggregate([
+            {$sort: {createdAt: 1}}
+          ])
+          return res.status(500).json({ result: events, msg: "Success"});
+        }
+      }
+      } catch (err) {
+        console.log(err)
+        return res.status(500).json({ result: err, msg: "Error"});
+      }
+}
 
     async allEventBids(req, res) {
       try {

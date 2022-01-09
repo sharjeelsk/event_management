@@ -247,7 +247,7 @@ class User {
         [
           {
             '$search': {
-              'index': 'default', 
+              'index': 'vendorSearch', 
               'text': {
                 'query': req.body.query, 
                 'path': [
