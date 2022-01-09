@@ -56,6 +56,9 @@ class Event {
                       }
                     
               }
+            },
+            {
+              "$sort": {createdAt: -1}
             }
           ])
           if (events) {
@@ -114,6 +117,7 @@ class Event {
         return res.status(200).json({ result: "Data Missing", msg: "Success"});
       }
       else {
+        console.log(option)
         if(option === "nearMe"){
           let events = await eventModel.aggregate([
             {
@@ -133,34 +137,31 @@ class Event {
               }
             }
           ])
-          return res.status(500).json({ result: events, msg: "Success"});
+          return res.status(200).json({ result: events, msg: "Success"});
         } 
-        if(option === "name"){
-          let events = await eventModel.aggregate([
-            {
-              "$search": {
-                "index": "eventSearch",
-
-                      "autocomplete": {
-                        "query": req.body.query,
-                        "path": "name"
-                      }
-              }
-            }
-          ])
-          return res.status(500).json({ result: events, msg: "Success"});
+        if(option === "AtoZ"){
+          let events = await eventModel.find().sort({name: 1})
+          console.log(events)
+          return res.status(200).json({ result: events, msg: "Success"});
+        }
+        if(option === "ZtoA"){
+          let events = await eventModel.find().sort({name: -1})
+          console.log(events)
+          return res.status(200).json({ result: events, msg: "Success"});
         }
         if(option === "oldest"){
           let events = await eventModel.aggregate([
-            {$sort: {createdAt: -1}}
+            {$sort: {createdAt: 1}}
           ])
-          return res.status(500).json({ result: events, msg: "Success"});
+          console.log("oldest", events)
+          return res.status(200).json({ result: events, msg: "Success"});
         }
         if(option === "newest"){
           let events = await eventModel.aggregate([
-            {$sort: {createdAt: 1}}
+            {$sort: {createdAt: -1}}
           ])
-          return res.status(500).json({ result: events, msg: "Success"});
+          console.log("newest",events)
+          return res.status(200).json({ result: events, msg: "Success"});
         }
       }
       } catch (err) {
