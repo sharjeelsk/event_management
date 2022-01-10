@@ -26,6 +26,6 @@ router.post("/join-event", isAuthorized, eventController.joinEvent);
 router.post("/unsub-event", isAuthorized, eventController.unSubEvent);
 router.get("/bided-event", isAuthorized, eventController.getBidedEvent);
 
-router.post("/filter", isAuthorized, eventController.filter);
+router.post("/filter", eventController.filter);
 
 module.exports = router;

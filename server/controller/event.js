@@ -140,12 +140,28 @@ class Event {
           return res.status(200).json({ result: events, msg: "Success"});
         } 
         if(option === "AtoZ"){
-          let events = await eventModel.find().sort({name: 1})
+          let events = await eventModel.aggregate([
+            { "$project": {
+              "name": 1,
+              "score": {
+                  "$cond": [
+                      { "$ifNull": [ "$name", false ] },
+                      1,
+                      10
+                  ]
+              }
+          }},
+          { "$sort": { "score": 1, "name": 1 } }
+
+          ])
           console.log(events)
           return res.status(200).json({ result: events, msg: "Success"});
         }
         if(option === "ZtoA"){
-          let events = await eventModel.find().sort({name: -1})
+          let events = await eventModel.aggregate([
+            {$match: {name: { $exists: true }}},
+            {$sort: {name: -1}}
+          ])
           console.log(events)
           return res.status(200).json({ result: events, msg: "Success"});
         }
