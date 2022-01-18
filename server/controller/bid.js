@@ -145,7 +145,7 @@ class Bid {
                     await bidModel.findByIdAndDelete({_id: bidId})
                     .then(async (deletedBid) => {
                       console.log(deletedBid)
-                        await User.updateOne({_id: req.user._id}, {$pull: {myBids: bidId,  myEvents: deletedBid.eventId, bidedEvent: deletedBid.eventId}})
+                        await User.updateOne({_id: req.user._id}, {$pull: {myBids: bidId, bidedEvent: deletedBid.eventId}})
                         .then( async (a) => {
                           console.log(a)
                             await Event.updateOne({_id: deletedBid.eventId}, {$pull: {"bids": bidId}, $inc: {totalBids: -1}})
