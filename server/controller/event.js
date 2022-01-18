@@ -290,9 +290,9 @@ class Event {
                         start, 
                         end, 
                         reqServices,
-                        totalSubs: 1,
+                        // totalSubs: 1,
                         eventAddress,
-                        subs: req.user._id,
+                        // subs: req.user._id,
                         members: contactList,
                         maxMembers: membersCount,
                         allowContact

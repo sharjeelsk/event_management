@@ -88,9 +88,9 @@ class Bid {
                                 _id: eventId,
                                 bids: {$ne: userId}
                                  };
-                            let eventInc = await Event.updateOne(query, {$inc: {totalBids: "+1", totalSubs: "+1"}})
+                            let eventInc = await Event.updateOne(query, {$inc: {totalBids: "+1", }})//totalSubs: "+1"
                             console.log("Bid Created Successfully... Updating User and Event...")
-                            await Event.findOneAndUpdate({_id: eventId}, {$addToSet: {bids: result._id, subs: userId}})
+                            await Event.findOneAndUpdate({_id: eventId}, {$addToSet: {bids: result._id, }})//subs: userId
                             .then( async (currentEvent) => {
                                 console.log("Event Updated Successfully")
                                 await User.updateOne({mobileNo: req.user.mobileNo}, {$addToSet: {myBids: result._id, myEvents: eventId, bidedEvent: eventId}})
