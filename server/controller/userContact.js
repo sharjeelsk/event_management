@@ -78,8 +78,8 @@ class UserContact {
                   let found2 = contactDoc.groups.some(el => (previousList = el.list))
                   console.log(found)
                   console.log(typeof previousList)
-                  let updationList = previousList.concat(newList)
-                  console.log(typeof updationList)
+                  // let updationList = previousList.concat(newList)
+                  // console.log(typeof updationList)
                   if(found === true){// update group
                     // await contactModel.updateOne({_id: contactDoc._id}, {$addToSet: {"groups.$[elem].list": values}}, { arrayFilters: [ { "elem.groupName": groupName } ] })
                     await contactModel.updateOne({_id: contactDoc._id}, {$addToSet: {"groups.$[elem].list": {$each: newList}}}, { arrayFilters: [ { "elem.groupName": groupName } ] })
