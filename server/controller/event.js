@@ -234,7 +234,7 @@ class Event {
 
     async getUserEvents(req, res) {
         try {
-            let user = await User.findOne({mobileNo: req.user.mobileNo}).populate("myEvents");
+            let user = await User.findOne({mobileNo: req.user.mobileNo}).populate("myEvents").sort({ _id: -1 });
             if(user){
                 return res.status(200).json({ result: user.myEvents, msg: "Success"});
             }

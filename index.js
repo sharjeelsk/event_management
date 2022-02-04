@@ -373,6 +373,7 @@ conn.once('open', async () => {
 
 // Routes
 app.use("/api/user", require("./server/routes/user"));
+app.use("/api/admin", require("./server/routes/admin"))
 app.use("/api/auth", require("./server/routes/auth"));
 app.use("/api/sTag", require("./server/routes/serviceTag"));
 app.use("/api/service", require("./server/routes/service"));
