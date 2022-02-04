@@ -14,7 +14,7 @@ const socketio = require("socket.io")
 const server = http.createServer(app)
 const io = socketio(server, {
   cors: {
-    origin: ["http://localhost:3000","http://localhost:3001", "http://localhost:3006", "http://localhost:57216"],
+    origin: ["http://localhost:3000","http://localhost:3001", "http://localhost:3006", "http://localhost:57216", "https://events-fawn.vercel.app"],
     methods: ["GET", "POST"],
   },
 });
