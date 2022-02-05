@@ -1,9 +1,11 @@
 const reportModel = require("../models/report");
 // const User = require("../models/user");
-// const Event = require("../models/event");
+const Event = require("../models/event");
+const Bid = require("../models/bid");
+const Report = require("../models/report");
 // const jwt = require("jsonwebtoken");
 
-class Bid {
+class ReportClass {
 
     async getAllReport(req, res) {
         try {
@@ -120,6 +122,41 @@ class Bid {
           }
     }
 
+    async deleteReportItem(req, res) {
+      try {
+          let { itemId, collectionName, reportId } = req.body;
+          if(!itemId || !collectionName || !reportId){
+              return res.status(500).json({ result: "Data Missing", msg: "Error"});
+          } else {
+            if(collectionName === "Event") {
+                Event.deleteOne({_id: itemId})
+                  .then((deletedReport) => {
+                      Report.updateOne({_id: reportId}, {$set: {status: "Deleted"}})
+                        .then((updatedReport) => {
+                          console.log("report set to | Deleted |")
+                          return res.status(200).json({ result: deletedReport.deletedCount, msg: "Success" });
+                    })
+                  })
+            } else if(collectionName === "Bid") {
+                Bid.deleteOne({_id: itemId})
+                  .then((deletedReport) => {
+                      Report.updateOne({_id: reportId}, {$set: {status: "Deleted"}})
+                        .then((updatedReport) => {
+                          console.log("report set to | Deleted |")
+                          return res.status(200).json({ result: deletedReport.deletedCount, msg: "Success" });
+                    })
+                  })
+            } else {
+              console.log("something went wrong")
+              return res.status(200).json({ result: "Something went wrong", msg: "Success" });
+            }
+          }
+        } catch (err) {
+          console.log(err)
+          return res.status(500).json({ result: err, msg: "Error"});
+        }
+  }
+
     // async approveBid(req, res) {
     //     try {
     //         let { bidId } = req.body;
@@ -138,5 +175,5 @@ class Bid {
     // }
 }
 
-const bidController = new Bid();
-module.exports = bidController;
+const reportController = new ReportClass();
+module.exports = reportController;

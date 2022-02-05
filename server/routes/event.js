@@ -15,7 +15,7 @@ router.get("/all-event", eventLimiter ,isAuthorized, eventController.getAllEvent
 router.post("/events-nearme", eventController.eventsNearMe);
 router.post("/search-event", eventController.searchEvent);
 router.get("/all-event-bids", isAuthorized, eventController.allEventBids);
-router.post("/single-event", isAuthorized, eventController.getSingleEvent);
+router.post("/single-event", eventController.getSingleEvent);
 router.get("/user-event", isAuthorized, eventController.getUserEvents);
 
 router.post("/create-event", isAuthorized, eventController.createEvent);

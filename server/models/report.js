@@ -18,6 +18,10 @@ const reportSchema = new mongoose.Schema(
     itemId: {
         type: String
     },
+    status: {
+      type: "string",
+      default: "None"
+    },
     reason: {
         type: String
     }
