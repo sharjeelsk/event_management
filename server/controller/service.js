@@ -153,18 +153,19 @@ class Service {
           }
     }
 
-    async AdmincreateService(req, res) {
+    async AdminCreateService(req, res) {
       try {
+        console.log(req.user._id)
         let { categoryId, category, subCategory, quantity, price, unit } = req.body;
         if( !category || !subCategory || !quantity || !price || !unit){
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
           console.log(req.body)
             let newCategory = category.charAt(0).toUpperCase() + category.slice(1);
-              if(categoryId === ''){
+              if(categoryId ===  ''){
                 console.log("iin NULL")
                 let createCategory = new Category({
-                  name: category,
+                  name: newCategory,
                   user: req.user._id
                 })
                 createCategory.save().then(async(cat) => {

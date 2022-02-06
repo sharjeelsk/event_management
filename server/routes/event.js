@@ -29,3 +29,5 @@ router.get("/bided-event", isAuthorized, eventController.getBidedEvent);
 router.post("/filter", eventController.filter);
 
 module.exports = router;
+
+//""

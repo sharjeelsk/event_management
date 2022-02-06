@@ -43,15 +43,26 @@ class Category {
             if(!name){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                    let newName = name.charAt(0).toUpperCase() + name.slice(1);
-                    let newCatgeory = new categoryModel({
+                    categoryModel.findOne({name: name})
+                    .then((category) => {
+                      if(!category || category === null){
+                        let newName = name.charAt(0).toUpperCase() + name.slice(1);
+                        let newCatgeory = new categoryModel({
                         name: newName,
                         approximation
                     })
-                    await newCatgeory.save().then((result) => {
+                    newCatgeory.save().then((result) => {
                         console.log("Category Created Successfully")
                         return res.status(200).json({ result: result, msg: "Success"});
                     })
+                    } else {
+                      categoryModel.updateOne({name: name}, {$set: {approximation: approximation}})
+                      .then((result) => {
+                        return res.status(200).json({ result: result, msg: "Success"});
+                      })
+                    }
+                })
+                    
             }
           } catch (err) {
             console.log(err)
