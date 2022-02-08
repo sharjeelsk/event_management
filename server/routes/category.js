@@ -8,6 +8,6 @@ router.get("/single-category", isAuthorized, categoryController.getSingleCategor
 
 router.post("/create-category", categoryController.createCategory);
 router.post("/update-category", isAuthorized, categoryController.updateCategory);
-router.post("/delete-category", isAuthorized, categoryController.deleteCategory);
+router.post("/delete-category", categoryController.deleteCategory);
 
 module.exports = router;

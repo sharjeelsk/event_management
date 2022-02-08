@@ -101,7 +101,7 @@ class Category {
             } else {
                     let deletedCategory = await categoryModel.deleteOne({_id: categoryId})
                       if(deletedCategory) {
-                        return res.status(200).json({ result: deletedCategory, msg: "Success" });
+                        return res.status(200).json({ result: deletedCategory.deletedCount, msg: "Success" });
                       }
             }
           } catch (err) {
