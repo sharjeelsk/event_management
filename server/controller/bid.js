@@ -40,6 +40,7 @@ class Bid {
             let user = await User.findOne({mobileNo: req.user.mobileNo})
                         .populate("myBids")
                         .select("myBids")
+                
             if(user){
               console.log(user.myBids)
                 return res.status(200).json({ result: user, msg: "Success"});

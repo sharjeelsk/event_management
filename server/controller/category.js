@@ -39,11 +39,11 @@ class Category {
 
     async createCategory(req, res) {
         try {
-            let { name, approximation} = req.body;
-            if(!name){
+            let { _id, name, approximation} = req.body;
+            if(!name || !_id || !approximation){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
-                    categoryModel.findOne({name: name})
+                    categoryModel.findOne({_id: _id})
                     .then((category) => {
                       if(!category || category === null){
                         let newName = name.charAt(0).toUpperCase() + name.slice(1);
@@ -56,7 +56,7 @@ class Category {
                         return res.status(200).json({ result: result, msg: "Success"});
                     })
                     } else {
-                      categoryModel.updateOne({name: name}, {$set: {approximation: approximation}})
+                      categoryModel.updateOne({_id: _id}, {$set: {name, approximation}})
                       .then((result) => {
                         return res.status(200).json({ result: result, msg: "Success"});
                       })
