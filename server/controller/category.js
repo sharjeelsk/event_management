@@ -39,8 +39,8 @@ class Category {
 
     async createCategory(req, res) {
         try {
-            let { _id, name, approximation} = req.body;
-            if(!name || !_id || !approximation){
+            let { _id, name, approximation, currency} = req.body;
+            if(!name || !_id || !approximation || !currency){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                     categoryModel.findOne({_id: _id})
@@ -49,14 +49,15 @@ class Category {
                         let newName = name.charAt(0).toUpperCase() + name.slice(1);
                         let newCatgeory = new categoryModel({
                         name: newName,
-                        approximation
+                        approximation,
+                        currency
                     })
                     newCatgeory.save().then((result) => {
                         console.log("Category Created Successfully")
                         return res.status(200).json({ result: result, msg: "Success"});
                     })
                     } else {
-                      categoryModel.updateOne({_id: _id}, {$set: {name, approximation}})
+                      categoryModel.updateOne({_id: _id}, {$set: {name, approximation, currency}})
                       .then((result) => {
                         return res.status(200).json({ result: result, msg: "Success"});
                       })

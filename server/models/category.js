@@ -10,6 +10,9 @@ const categorySchema = new mongoose.Schema(
     },
     approximation:{
       type: String,
+    },
+    currency: {
+      type: String,
     }
   },
   { timestamps: true }
