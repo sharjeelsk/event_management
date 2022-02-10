@@ -40,7 +40,7 @@ class Category {
     async createCategory(req, res) {
         try {
             let { _id, name, approximation, currency} = req.body;
-            if(!name || !_id || !approximation || !currency){
+            if(!name || !approximation || !currency){
                 return res.status(500).json({ result: "Data Missing", msg: "Error"});
             } else {
                     categoryModel.findOne({_id: _id})
