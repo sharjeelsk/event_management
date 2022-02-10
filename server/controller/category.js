@@ -55,7 +55,7 @@ class Category {
                     newCatgeory.save().then((result) => {
                         console.log("Category Created Successfully")
                         return res.status(200).json({ result: result, msg: "Success"});
-                    })
+                    }) //xyz
                     } else {
                       categoryModel.updateOne({_id: _id}, {$set: {name, approximation, currency}})
                       .then((result) => {
