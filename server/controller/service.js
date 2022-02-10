@@ -155,6 +155,7 @@ class Service {
 
     async AdminCreateService(req, res) {
       try {
+        //abcd
         console.log(req.user._id)
         let { categoryId, category, subCategory, quantity, price, unit } = req.body;
         if( !category || !subCategory || !quantity || !price || !unit){
